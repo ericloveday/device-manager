@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCA Device Manager</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Google Fonts: Montserrat -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -18,7 +16,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
 
-    <!-- Top Navigation Bar (Updated to Custom CCA Crimson #c80206) -->
     <header class="text-white shadow-md px-6 py-4 flex justify-between items-center" style="background-color: #c80206;">
         <div>
             <h1 class="text-xl font-black tracking-wide">CCA Device Manager</h1>
@@ -31,7 +28,6 @@
 
     <main class="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
 
-        <!-- Section 1: The Scanning Kiosk Area -->
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-100 pb-4 mb-4 gap-4">
                 <div>
@@ -39,7 +35,6 @@
                     <p class="text-sm text-gray-500">Scan student barcode sheet or type manually</p>
                 </div>
                 
-                <!-- Toggle Switch for Checkout vs Checkin -->
                 <div class="flex bg-gray-100 p-1 rounded-xl w-fit">
                     <button id="btn-checkout" onclick="setMode('checkout')" class="px-4 py-2 text-sm font-semibold rounded-lg bg-white shadow-sm transition-all" style="color: #c80206;">
                         🚀 Check Out
@@ -50,7 +45,6 @@
                 </div>
             </div>
 
-            <!-- Input Fields optimized for barcode scanners -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">1. Student ID / Name</label>
@@ -67,12 +61,11 @@
             <div id="scan-feedback" class="mt-4 p-3 rounded-xl text-sm font-medium hidden"></div>
         </section>
 
-        <!-- Section 2: Visual Cart Grid View -->
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex justify-between items-center mb-4">
                 <div>
                     <h2 class="text-lg font-bold text-gray-900">Classroom Cart Visualizer</h2>
-                    <p class="text-sm text-gray-500">Select a slot to quickly log issues or view user history</p>
+                    <p class="text-sm text-gray-500">Select a slot to quickly log issues, mark missing, or view user history</p>
                 </div>
                 <select class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#c80206]">
                     <option>7th Grade - Cart A</option>
@@ -82,15 +75,12 @@
                 </select>
             </div>
 
-            <!-- Grid container where slots are populated -->
             <div id="cart-grid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-3">
-                <!-- Javascript will inject 30 interactive slots here -->
-            </div>
+                </div>
         </section>
 
     </main>
 
-    <!-- Page Interactive Logic -->
     <script>
         let currentMode = 'checkout';
 
@@ -120,13 +110,21 @@
         for (let i = 1; i <= 30; i++) {
             const slot = document.createElement('button');
             
+            // Default: In Cart (Green)
             let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
             let statusText = "In Cart";
             
-            if (i === 7 || i === 22) {
-                statusColor = "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100";
+            // Varying statuses for visual preview
+            if (i === 4 || i === 18) {
+                // NEW: Missing State (Orange/Amber)
+                statusColor = "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100";
+                statusText = "Missing";
+            } else if (i === 7 || i === 22) {
+                // Out State (Yellow)
+                statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
                 statusText = "Out";
             } else if (i === 13) {
+                // Repair State (Red)
                 statusColor = "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100";
                 statusText = "Repair";
             }
@@ -138,7 +136,7 @@
                 <span class="text-[10px] font-bold mt-1 uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-white/60">${statusText}</span>
             `;
             
-            slot.onclick = () => alert(`You clicked Cart Slot #${i}. Later, we can hook this up to reveal who has this device or change its repair status instantly!`);
+            slot.onclick = () => alert(`You clicked Cart Slot #${i} (${statusText}). Later, we can program this to toggle between states or update Firebase!`);
             gridContainer.appendChild(slot);
         }
     </script>
