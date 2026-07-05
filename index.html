@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCA Device Manager</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Google Fonts: Montserrat -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -18,31 +16,34 @@
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
 
-    <!-- Top Navigation Bar (Custom CCA Crimson #c80206) -->
-    <header class="text-white shadow-md px-6 py-4 flex justify-between items-center" style="background-color: #c80206;">
+    <header class="text-white shadow-md px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4" style="background-color: #c80206;">
         <div>
             <h1 class="text-xl font-black tracking-wide">CCA Device Manager</h1>
             <p class="text-xs opacity-90">K-12 Chromebook Management Portal</p>
         </div>
-        <div class="text-right">
-            <span id="current-view" class="bg-black/20 px-3 py-1 rounded-full text-xs font-semibold">Live Database Mode</span>
+        
+        <div class="flex bg-black/20 p-1 rounded-xl text-sm font-bold">
+            <button id="tab-kiosk" onclick="switchView('kiosk')" class="px-4 py-2 rounded-lg bg-white text-[#c80206] shadow transition-all cursor-pointer">
+                🏫 Kiosk & Carts
+            </button>
+            <button id="tab-admin" onclick="switchView('admin')" class="px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer">
+                📊 Admin Fleet Dashboard
+            </button>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+    <main id="view-kiosk-container" class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
 
-        <!-- Section 1: The Scanning Kiosk Area -->
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-100 pb-4 mb-4 gap-4">
                 <div>
                     <h2 class="text-lg font-bold text-gray-900">Central Scan Station</h2>
-                    <p class="text-sm text-gray-500">Scan student barcode sheet or link manually below</p>
+                    <p class="text-sm text-gray-500">Scan student sheet or link manually below. Works for Carts or Loose Devices.</p>
                 </div>
                 
-                <!-- Expanded Toggle Switch for Log Modes -->
                 <div class="flex bg-gray-100 p-1 rounded-xl w-fit flex-wrap gap-1">
                     <button id="btn-checkout" onclick="setMode('checkout')" class="px-3 py-1.5 text-xs md:text-sm font-semibold rounded-lg bg-white shadow-sm transition-all" style="color: #c80206;">
-                        🚀 Signed Out
+                        🚀 Out
                     </button>
                     <button id="btn-overnight" onclick="setMode('overnight')" class="px-3 py-1.5 text-xs md:text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-900 transition-all">
                         🌙 Overnight Loan
@@ -53,54 +54,105 @@
                 </div>
             </div>
 
-            <!-- Inputs & Action Button -->
             <div class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-2">
                         <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">1. Student Name / ID</label>
                         <input type="text" id="student-input" placeholder="Type name or scan sheet..." 
                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:bg-white transition-all text-base focus:ring-[#c80206]">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">2. Cart Slot Number</label>
-                        <input type="number" id="slot-input" min="1" max="30" placeholder="e.g. 14" 
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">2. Chromebook Asset Tag</label>
+                        <input type="text" id="asset-input" placeholder="Scan device barcode label..." 
                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:bg-white transition-all text-base focus:ring-[#c80206]">
                     </div>
                     <div class="flex items-end">
                         <button onclick="processTransaction()" class="w-full text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md active:scale-98 cursor-pointer" style="background-color: #c80206;">
-                            Submit Transaction
+                            Submit
                         </button>
                     </div>
                 </div>
                 
-                <!-- Status Feedback message bar -->
                 <div id="scan-feedback" class="p-4 rounded-xl text-sm font-semibold hidden transition-all"></div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Section 2: Visual Cart Grid View -->
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-lg font-bold text-gray-900">Classroom Cart Visualizer</h2>
-                    <p class="text-sm text-gray-500">Click a slot to quickly view assignment details or run instant overrides</p>
+                    <p class="text-sm text-gray-500">Quick view toggle or update map checks</p>
                 </div>
                 <select id="cart-selector" onchange="loadCartData()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#c80206]">
                     <option value="7th-Grade-Cart-A">7th Grade - Cart A</option>
                     <option value="7th-Grade-Cart-B">7th Grade - Cart B</option>
                     <option value="6th-Grade-Cart-A">6th Grade - Cart A</option>
+                    <option value="Unassigned-Loose-Devices">Loose / Vault Devices</option>
                 </select>
             </div>
 
-            <!-- Grid container forced to 15 columns on wide screens (two rows of 15) -->
             <div id="cart-grid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-15 gap-2.5">
                 <div class="col-span-full text-center py-8 text-gray-400 text-sm">Connecting to Firebase...</div>
             </div>
         </section>
-
     </main>
 
-    <!-- Firebase Compatibility SDK Core Scripts -->
+
+    <main id="view-admin-container" class="max-w-7xl mx-auto p-4 md:p-6 space-y-6 hidden">
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="sm:flex sm:items-center sm:justify-between border-b border-gray-100 pb-5 mb-5">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Building-Wide Master Fleet Audit</h2>
+                    <p class="text-sm text-gray-500">Real-time status tracking of all registered Chromebook hardware</p>
+                </div>
+                <div class="mt-4 sm:mt-0 flex gap-2">
+                    <input type="text" id="admin-search-input" onkeyup="filterAdminTable()" placeholder="Search asset, student, status..." 
+                           class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#c80206] text-sm w-64">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 text-center">
+                <div class="p-3 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl">
+                    <span class="block text-xs font-bold uppercase tracking-wider opacity-70">Available / In Cart</span>
+                    <span id="metric-incart" class="text-xl font-black">0</span>
+                </div>
+                <div class="p-3 bg-yellow-50 text-yellow-700 border border-yellow-100 rounded-xl">
+                    <span class="block text-xs font-bold uppercase tracking-wider opacity-70">Out to Student</span>
+                    <span id="metric-out" class="text-xl font-black">0</span>
+                </div>
+                <div class="p-3 bg-purple-50 text-purple-700 border border-purple-100 rounded-xl">
+                    <span class="block text-xs font-bold uppercase tracking-wider opacity-70">Overnight Loan</span>
+                    <span id="metric-overnight" class="text-xl font-black">0</span>
+                </div>
+                <div class="p-3 bg-orange-50 text-orange-700 border border-orange-100 rounded-xl">
+                    <span class="block text-xs font-bold uppercase tracking-wider opacity-70">Missing Flags</span>
+                    <span id="metric-missing" class="text-xl font-black">0</span>
+                </div>
+                <div class="p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-xl">
+                    <span class="block text-xs font-bold uppercase tracking-wider opacity-70">In Repair Shop</span>
+                    <span id="metric-repair" class="text-xl font-black">0</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-gray-100">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold uppercase tracking-wider text-xs">
+                            <th class="p-4">Asset Tag</th>
+                            <th class="p-4">Assigned Location</th>
+                            <th class="p-4">Current User Status</th>
+                            <th class="p-4 text-center">Status Label</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body" class="divide-y divide-gray-50">
+                        <tr>
+                            <td colspan="4" class="p-8 text-center text-gray-400">Loading master building registers...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
@@ -121,6 +173,28 @@
         const database = firebase.database();
 
         let currentMode = 'checkout';
+
+        // Toggle overall app layout view states
+        function switchView(target) {
+            const kioskTab = document.getElementById('tab-kiosk');
+            const adminTab = document.getElementById('tab-admin');
+            const kioskMain = document.getElementById('view-kiosk-container');
+            const adminMain = document.getElementById('view-admin-container');
+
+            if (target === 'kiosk') {
+                kioskMain.classList.remove('hidden');
+                adminMain.classList.add('hidden');
+                kioskTab.className = "px-4 py-2 rounded-lg bg-white text-[#c80206] shadow transition-all cursor-pointer";
+                adminTab.className = "px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer";
+                loadCartData();
+            } else {
+                kioskMain.classList.add('hidden');
+                adminMain.classList.remove('hidden');
+                adminTab.className = "px-4 py-2 rounded-lg bg-white text-[#c80206] shadow transition-all cursor-pointer";
+                kioskTab.className = "px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer";
+                buildAdminDashboard();
+            }
+        }
 
         function setMode(mode) {
             currentMode = mode;
@@ -147,52 +221,53 @@
                 btnCheckin.className = "px-3 py-1.5 text-xs md:text-sm font-semibold rounded-lg bg-white shadow-sm transition-all";
                 btnCheckin.style.color = "#c80206";
                 document.getElementById('student-input').disabled = true;
-                document.getElementById('student-input').placeholder = "(Slot update only)";
+                document.getElementById('student-input').placeholder = "(Asset scan overrides to In Cart)";
             }
         }
 
-        // Process kiosk scan station updates
+        // Smarter Transaction handler processing both cart coordinates and asset numbers
         function processTransaction() {
             const selectedCart = document.getElementById('cart-selector').value;
             const studentName = document.getElementById('student-input').value.trim();
-            const slotNum = document.getElementById('slot-input').value.trim();
-            const feedback = document.getElementById('scan-feedback');
+            const assetInput = document.getElementById('asset-input').value.trim();
 
-            if (!slotNum || slotNum < 1 || slotNum > 30) {
-                showFeedback("Please enter a valid slot number (1-30).", "bg-red-50 text-red-700 border border-red-200");
+            if (!assetInput) {
+                showFeedback("Asset tag identification number is required.", "bg-red-50 text-red-700 border border-red-200");
                 return;
             }
 
             if (currentMode !== 'checkin' && !studentName) {
-                showFeedback("Student identity is required for sign-out or overnight loans.", "bg-red-50 text-red-700 border border-red-200");
+                showFeedback("Please supply student identity metrics for sign out fields.", "bg-red-50 text-red-700 border border-red-200");
                 return;
             }
 
-            const slotId = 'slot_' + slotNum;
             let targetStatus = 'In Cart';
             let assignedUser = '';
 
-            if (currentMode === 'checkout') {
-                targetStatus = 'Signed Out';
-                assignedUser = studentName;
-            } else if (currentMode === 'overnight') {
-                targetStatus = 'Overnight';
-                assignedUser = studentName;
+            if (currentMode === 'checkout') targetStatus = 'Out';
+            else if (currentMode === 'overnight') targetStatus = 'Overnight';
+
+            // Determine if the input asset matches a specific slot number directly
+            let slotKey = 'slot_' + assetInput; 
+            let targetCart = selectedCart;
+
+            // If the user typed an arbitrary device tag name not bound to standard slot IDs
+            if (isNaN(assetInput) || assetInput < 1 || assetInput > 30) {
+                slotKey = 'asset_' + assetInput.replace(/[^a-zA-Z0-9]/g, "");
+                if (selectedCart !== 'Unassigned-Loose-Devices') {
+                    targetCart = 'Unassigned-Loose-Devices';
+                }
+                if (targetStatus === 'In Cart') targetStatus = 'Available';
             }
 
-            // Sync structural parameters straight to the specific Firebase slot node
-            database.ref('carts/' + selectedCart + '/' + slotId).update({
+            database.ref('carts/' + targetCart + '/' + slotKey).update({
+                number: assetInput,
                 status: targetStatus,
                 assignedTo: assignedUser
             }).then(() => {
-                if (currentMode === 'checkin') {
-                    showFeedback(`Slot ${slotNum} is safely back in the cart.`, "bg-emerald-50 text-emerald-700 border border-emerald-200");
-                } else {
-                    showFeedback(`Slot ${slotNum} assigned successfully to ${studentName}!`, "bg-blue-50 text-blue-700 border border-blue-200");
-                }
-                // Clear fields cleanly for next entry
+                showFeedback(`Asset balance adjusted successfully!`, "bg-blue-50 text-blue-700 border border-blue-200");
                 document.getElementById('student-input').value = '';
-                document.getElementById('slot-input').value = '';
+                document.getElementById('asset-input').value = '';
             });
         }
 
@@ -201,10 +276,10 @@
             feedback.innerText = msg;
             feedback.className = `p-4 rounded-xl text-sm font-semibold transition-all ${classes}`;
             feedback.classList.remove('hidden');
-            setTimeout(() => feedback.classList.add('hidden'), 5000); // clear note in 5s
+            setTimeout(() => feedback.classList.add('hidden'), 5000);
         }
 
-        // Load Cart Data Dynamically from Firebase Realtime Database
+        // Load Cart Data View Monitor
         function loadCartData() {
             const selectedCart = document.getElementById('cart-selector').value;
             const gridContainer = document.getElementById('cart-grid');
@@ -218,69 +293,123 @@
                     return;
                 }
 
-                const sortedKeys = Object.keys(data).sort((a, b) => {
-                    const numA = parseInt(a.replace('slot_', ''), 10);
-                    const numB = parseInt(b.replace('slot_', ''), 10);
-                    return numA - numB;
-                });
-
-                sortedKeys.forEach((slotId) => {
+                Object.keys(data).forEach((slotId) => {
                     const slotData = data[slotId];
                     const slotElement = document.createElement('button');
                     
                     let currentStatus = slotData.status;
+                    if (currentStatus === 'Signed Out') currentStatus = 'Out';
                     let currentUser = slotData.assignedTo || '';
                     
                     let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
                     if (currentStatus === 'Missing') statusColor = "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100";
-                    if (currentStatus === 'Signed Out') statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
+                    if (currentStatus === 'Out') statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
                     if (currentStatus === 'Repair') statusColor = "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100";
                     if (currentStatus === 'Overnight') statusColor = "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100";
+                    if (currentStatus === 'Available') statusColor = "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100";
 
-                    slotElement.className = `flex flex-col items-center justify-between p-2 rounded-xl border transition-all cursor-pointer ${statusColor} min-h-[84px] text-center`;
+                    slotElement.className = `flex flex-col items-center justify-between p-2 rounded-xl border transition-all cursor-pointer ${statusColor} min-h-[80px] text-center`;
                     
-                    // Display name inside the slot card if it's assigned to someone
-                    let userLabel = currentUser ? `<span class="text-[9px] font-medium tracking-tight truncate w-full block text-gray-600 mt-0.5 bg-white/40 rounded px-0.5">${currentUser}</span>` : '';
-                    
+                    let userLabel = currentUser ? `<span class="text-[9px] font-medium tracking-tight truncate w-full block text-gray-600 bg-white/40 rounded px-0.5">${currentUser}</span>` : '';
+                    let displayIdName = isNaN(slotData.number) ? 'Tag' : 'Slot';
+
                     slotElement.innerHTML = `
                         <div>
-                            <span class="text-[9px] font-bold uppercase tracking-wider opacity-50 block leading-none">Slot</span>
-                            <span class="text-lg font-black leading-none">${slotData.number}</span>
+                            <span class="text-[9px] font-bold uppercase tracking-wider opacity-50 block leading-none">${displayIdName}</span>
+                            <span class="text-base font-black leading-none">${slotData.number}</span>
                         </div>
                         ${userLabel}
                         <span class="text-[9px] font-bold uppercase tracking-wide px-1 py-0.5 rounded bg-white/70 text-center w-full truncate leading-none mt-1">${currentStatus}</span>
                     `;
                     
-                    // Clicking a slot prompts a quick detail check or fast state cycle override
                     slotElement.onclick = () => {
                         if(currentUser) {
-                            if(confirm(`Slot ${slotData.number} is currently held by: ${currentUser}.\n\nWould you like to clear this and check the device back into the cart?`)) {
-                                database.ref('carts/' + selectedCart + '/' + slotId).update({ status: 'In Cart', assignedTo: '' });
+                            if(confirm(`Device tracking associated with: ${currentUser}.\n\nReturn item to base inventory status?`)) {
+                                let defaultReset = isNaN(slotData.number) ? 'Available' : 'In Cart';
+                                database.ref('carts/' + selectedCart + '/' + slotId).update({ status: defaultReset, assignedTo: '' });
                             }
                         } else {
-                            let nextStatus = 'In Cart';
-                            if (currentStatus === 'In Cart') nextStatus = 'Signed Out';
-                            else if (currentStatus === 'Signed Out') nextStatus = 'Overnight';
+                            let nextStatus = isNaN(slotData.number) ? 'Available' : 'In Cart';
+                            if (currentStatus === 'In Cart' || currentStatus === 'Available') nextStatus = 'Out';
+                            else if (currentStatus === 'Out') nextStatus = 'Overnight';
                             else if (currentStatus === 'Overnight') nextStatus = 'Missing';
                             else if (currentStatus === 'Missing') nextStatus = 'Repair';
                             
                             database.ref('carts/' + selectedCart + '/' + slotId).update({ status: nextStatus });
                         }
                     };
-                    
                     gridContainer.appendChild(slotElement);
                 });
             });
         }
 
+        // Pull and aggregate data metrics across all categories for admin audits
+        function buildAdminDashboard() {
+            const tableBody = document.getElementById('admin-table-body');
+            
+            database.ref('carts').on('value', (snapshot) => {
+                tableBody.innerHTML = '';
+                const allCarts = snapshot.val() || {};
+                
+                let countInCart = 0, countOut = 0, countOvernight = 0, countMissing = 0, countRepair = 0;
+
+                Object.keys(allCarts).forEach(cartId => {
+                    const devices = allCarts[cartId];
+                    Object.keys(devices).forEach(slotId => {
+                        const dev = devices[slotId];
+                        
+                        let status = dev.status;
+                        if (status === 'Signed Out') status = 'Out';
+
+                        if (status === 'In Cart' || status === 'Available') countInCart++;
+                        else if (status === 'Out') countOut++;
+                        else if (status === 'Overnight') countOvernight++;
+                        else if (status === 'Missing') countMissing++;
+                        else if (status === 'Repair') countRepair++;
+
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-gray-50/80 transition-colors";
+                        
+                        let badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                        if (status === 'Out') badgeStyle = "bg-yellow-50 text-yellow-700 border-yellow-100";
+                        if (status === 'Overnight') badgeStyle = "bg-purple-50 text-purple-700 border-purple-100";
+                        if (status === 'Missing') badgeStyle = "bg-orange-50 text-orange-700 border-orange-100";
+                        if (status === 'Repair') badgeStyle = "bg-rose-50 text-rose-700 border-rose-100";
+
+                        tr.innerHTML = `
+                            <td class="p-4 font-bold text-gray-900">${dev.number}</td>
+                            <td class="p-4 text-gray-500 font-medium">${cartId.replace(/-/g, ' ')}</td>
+                            <td class="p-4 text-gray-600 font-semibold">${dev.assignedTo || '—'}</td>
+                            <td class="p-4 text-center">
+                                <span class="px-2.5 py-1 text-xs font-bold rounded-md border ${badgeStyle}">${status}</span>
+                            </td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                });
+
+                document.getElementById('metric-incart').innerText = countInCart;
+                document.getElementById('metric-out').innerText = countOut;
+                document.getElementById('metric-overnight').innerText = countOvernight;
+                document.getElementById('metric-missing').innerText = countMissing;
+                document.getElementById('metric-repair').innerText = countRepair;
+            });
+        }
+
+        function filterAdminTable() {
+            const input = document.getElementById('admin-search-input').value.toUpperCase();
+            const rows = document.getElementById('admin-table-body').getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                const text = rows[i].textContent || rows[i].innerText;
+                rows[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
+
         function initializeEmptyCart(cartId) {
+            if (cartId === 'Unassigned-Loose-Devices') return; // let user build freely
             const initialData = {};
             for (let i = 1; i <= 30; i++) {
-                initialData['slot_' + i] = {
-                    number: i,
-                    status: 'In Cart',
-                    assignedTo: ''
-                };
+                initialData['slot_' + i] = { number: i, status: 'In Cart', assignedTo: '' };
             }
             database.ref('carts/' + cartId).set(initialData);
         }
