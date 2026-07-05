@@ -78,16 +78,29 @@
         </section>
 
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div>
                     <h2 class="text-lg font-bold text-gray-900">Classroom Cart Visualizer</h2>
-                    <p class="text-sm text-gray-500">Select a cart to view. Click a slot card to manually map or edit its Asset Tag number.</p>
+                    <p id="cart-meta-display" class="text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1 rounded-lg border border-gray-100 w-fit mt-1">
+                        Loading assignment details...
+                    </p>
                 </div>
                 <select id="cart-selector" onchange="loadCartData()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#c80206]">
-                    <option value="7th-Grade-Cart-A">7th Grade - Cart A</option>
-                    <option value="7th-Grade-Cart-B">7th Grade - Cart B</option>
-                    <option value="6th-Grade-Cart-A">6th Grade - Cart A</option>
-                    <option value="Unassigned-Loose-Devices">Loose / Vault Devices</option>
+                    <optgroup label="7th Grade Carts">
+                        <option value="7th-Grade-Cart-A">7th Grade - Cart A</option>
+                        <option value="7th-Grade-Cart-B">7th Grade - Cart B</option>
+                        <option value="7th-Grade-Cart-C">7th Grade - Cart C</option>
+                        <option value="7th-Grade-Cart-D">7th Grade - Cart D</option>
+                    </optgroup>
+                    <optgroup label="6th Grade Carts">
+                        <option value="6th-Grade-Cart-A">6th Grade - Cart A</option>
+                        <option value="6th-Grade-Cart-B">6th Grade - Cart B</option>
+                        <option value="6th-Grade-Cart-C">6th Grade - Cart C</option>
+                        <option value="6th-Grade-Cart-D">6th Grade - Cart D</option>
+                    </optgroup>
+                    <optgroup label="Standalone">
+                        <option value="Unassigned-Loose-Devices">Loose / Vault Devices</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -98,6 +111,41 @@
     </main>
 
     <main id="view-admin-container" class="max-w-7xl mx-auto p-4 md:p-6 space-y-6 hidden">
+        
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h2 class="text-lg font-bold text-gray-900 mb-1">Master Cart Assignment Registry</h2>
+            <p class="text-xs text-gray-500 mb-4">Assign teacher ownership and physical classroom location details to individual carts.</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Select Cart</label>
+                    <select id="meta-cart-select" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#c80206]">
+                        <option value="7th-Grade-Cart-A">7th Grade - Cart A</option>
+                        <option value="7th-Grade-Cart-B">7th Grade - Cart B</option>
+                        <option value="7th-Grade-Cart-C">7th Grade - Cart C</option>
+                        <option value="7th-Grade-Cart-D">7th Grade - Cart D</option>
+                        <option value="6th-Grade-Cart-A">6th Grade - Cart A</option>
+                        <option value="6th-Grade-Cart-B">6th Grade - Cart B</option>
+                        <option value="6th-Grade-Cart-C">6th Grade - Cart C</option>
+                        <option value="6th-Grade-Cart-D">6th Grade - Cart D</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Teacher Name</label>
+                    <input type="text" id="meta-teacher-input" placeholder="e.g. Mrs. Smith" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#c80206]">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Room Number</label>
+                    <input type="text" id="meta-room-input" placeholder="e.g. Room 204" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#c80206]">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="saveCartMetadata()" class="w-full text-white text-sm font-bold py-2 px-4 rounded-xl shadow transition-all active:scale-98 cursor-pointer" style="background-color: #c80206;">
+                        Save Assignment
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="sm:flex sm:items-center sm:justify-between border-b border-gray-100 pb-5 mb-5">
                 <div>
@@ -105,7 +153,7 @@
                     <p class="text-sm text-gray-500">Real-time status tracking of all mapped asset numbers</p>
                 </div>
                 <div class="mt-4 sm:mt-0 flex gap-2">
-                    <input type="text" id="admin-search-input" onkeyup="filterAdminTable()" placeholder="Search asset, student, status..." 
+                    <input type="text" id="admin-search-input" onkeyup="filterAdminTable()" placeholder="Search asset, teacher, room, status..." 
                            class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#c80206] text-sm w-64">
                 </div>
             </div>
@@ -139,13 +187,14 @@
                         <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold uppercase tracking-wider text-xs">
                             <th class="p-4">Asset Tag ID</th>
                             <th class="p-4">Assigned Location</th>
+                            <th class="p-4">Owner Assignment</th>
                             <th class="p-4">Current User Status</th>
                             <th class="p-4 text-center">Status Label</th>
                         </tr>
                     </thead>
                     <tbody id="admin-table-body" class="divide-y divide-gray-50">
                         <tr>
-                            <td colspan="4" class="p-8 text-center text-gray-400">Loading master building registers...</td>
+                            <td colspan="5" class="p-8 text-center text-gray-400">Loading master building registers...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -173,6 +222,13 @@
         const database = firebase.database();
 
         let currentMode = 'checkout';
+        let globalCartMetadata = {}; // Locally cached metadata object
+
+        // Fetch global assignment registry on boot
+        database.ref('cart_metadata').on('value', (snapshot) => {
+            globalCartMetadata = snapshot.val() || {};
+            updateCartMetaLabel();
+        });
 
         function switchView(target) {
             const kioskTab = document.getElementById('tab-kiosk');
@@ -224,9 +280,39 @@
             }
         }
 
-        // INTELLIGENT AUTO-ROUTING TRANSACTION SYSTEM
-        function processTransaction() {
+        function saveCartMetadata() {
+            const targetCart = document.getElementById('meta-cart-select').value;
+            const teacher = document.getElementById('meta-teacher-input').value.trim();
+            const room = document.getElementById('meta-room-input').value.trim();
+
+            database.ref('cart_metadata/' + targetCart).set({
+                teacherName: teacher || 'Unassigned',
+                roomNumber: room || 'N/A'
+            }).then(() => {
+                alert("Cart assignment saved successfully!");
+                document.getElementById('meta-teacher-input').value = '';
+                document.getElementById('meta-room-input').value = '';
+            });
+        }
+
+        function updateCartMetaLabel() {
             const currentDropdownCart = document.getElementById('cart-selector').value;
+            const metaDisplay = document.getElementById('cart-meta-display');
+            
+            if (currentDropdownCart === 'Unassigned-Loose-Devices') {
+                metaDisplay.innerHTML = "📍 Loose Individual Building Stock";
+                return;
+            }
+
+            const meta = globalCartMetadata[currentDropdownCart];
+            if (meta) {
+                metaDisplay.innerHTML = `👤 Owner: <strong class="text-gray-900">${meta.teacherName}</strong> | 📍 Location: <strong class="text-gray-900">${meta.roomNumber}</strong>`;
+            } else {
+                metaDisplay.innerHTML = `⚠️ No teacher or room configured yet for this cart.`;
+            }
+        }
+
+        function processTransaction() {
             const studentName = document.getElementById('student-input').value.trim();
             const scannedAsset = document.getElementById('asset-input').value.trim();
 
@@ -243,14 +329,12 @@
             let targetStatus = (currentMode === 'checkout') ? 'Out' : (currentMode === 'overnight') ? 'Overnight' : 'In Cart';
             let assignedUser = (currentMode === 'checkin') ? '' : studentName;
 
-            // Step 1: Scan all carts in the database to see if this asset tag is already mapped to a slot
             database.ref('carts').once('value', (snapshot) => {
                 const allCarts = snapshot.val() || {};
                 let foundCart = null;
                 let foundSlotKey = null;
                 let foundSlotNumber = null;
 
-                // Loop through to find a match for the scanned asset tag field
                 Object.keys(allCarts).forEach(cartId => {
                     Object.keys(allCarts[cartId]).forEach(slotId => {
                         if (String(allCarts[cartId][slotId].assetTag) === String(scannedAsset)) {
@@ -261,20 +345,16 @@
                     });
                 });
 
-                // Step 2: Route the database update accordingly
                 if (foundCart && foundSlotKey) {
-                    // It's a mapped cart device! Route it directly to its home cart slot.
-                    if (targetStatus === 'In Cart') targetStatus = 'In Cart'; 
-                    
                     database.ref(`carts/${foundCart}/${foundSlotKey}`).update({
                         status: targetStatus,
                         assignedTo: assignedUser
                     }).then(() => {
                         showFeedback(`Auto-Routed: Mapped Asset Tag into ${foundCart.replace(/-/g, ' ')} Slot ${foundSlotNumber}.`, "bg-emerald-50 text-emerald-700 border border-emerald-200");
-                        clearFormInputs();
+                        document.getElementById('student-input').value = '';
+                        document.getElementById('asset-input').value = '';
                     });
                 } else {
-                    // It's a loose device or unmapped tag. Put it in the Loose bucket temporarily.
                     const looseSlotKey = 'asset_' + scannedAsset.replace(/[^a-zA-Z0-9]/g, "");
                     if (targetStatus === 'In Cart') targetStatus = 'Available';
 
@@ -285,15 +365,11 @@
                         assignedTo: assignedUser
                     }).then(() => {
                         showFeedback(`Logged under Loose / Vault Devices (unmapped tag).`, "bg-blue-50 text-blue-700 border border-blue-200");
-                        clearFormInputs();
+                        document.getElementById('student-input').value = '';
+                        document.getElementById('asset-input').value = '';
                     });
                 }
             });
-        }
-
-        function clearFormInputs() {
-            document.getElementById('student-input').value = '';
-            document.getElementById('asset-input').value = '';
         }
 
         function showFeedback(msg, classes) {
@@ -304,10 +380,10 @@
             setTimeout(() => feedback.classList.add('hidden'), 6000);
         }
 
-        // Render visual grid dashboard maps
         function loadCartData() {
             const selectedCart = document.getElementById('cart-selector').value;
             const gridContainer = document.getElementById('cart-grid');
+            updateCartMetaLabel();
             
             database.ref('carts/' + selectedCart).on('value', (snapshot) => {
                 gridContainer.innerHTML = ''; 
@@ -356,15 +432,13 @@
                         <span class="text-[9px] font-bold uppercase tracking-wide px-1 py-0.5 rounded bg-white/70 text-center w-full truncate leading-none mt-1">${currentStatus}</span>
                     `;
                     
-                    // Click mapping configuration management menu options
                     slotElement.onclick = () => {
                         if (selectedCart === 'Unassigned-Loose-Devices') {
-                            if(confirm(`Remove loose asset tag #${activeAsset} entirely from base logging parameters?`)) {
+                            if(confirm(`Remove loose asset tag #${activeAsset}?`)) {
                                 database.ref(`carts/Unassigned-Loose-Devices/${slotId}`).remove();
                             }
                         } else {
-                            // Prompt asking to manually configure/update Asset Tag mapping
-                            let userPrompt = prompt(`Configure Asset Tag for ${selectedCart.replace(/-/g, ' ')} Slot ${slotData.number}:\n\nCurrent Tag: ${activeAsset}\n\nEnter new barcode number below:`, activeAsset === 'Unmapped' ? '' : activeAsset);
+                            let userPrompt = prompt(`Configure Asset Tag for ${selectedCart.replace(/-/g, ' ')} Slot ${slotData.number}:\n\nEnter barcode text:`, activeAsset === 'Unmapped' ? '' : activeAsset);
                             if (userPrompt !== null) {
                                 database.ref(`carts/${selectedCart}/${slotId}`).update({
                                     assetTag: userPrompt.trim() || 'Unmapped'
@@ -388,6 +462,8 @@
 
                 Object.keys(allCarts).forEach(cartId => {
                     const devices = allCarts[cartId];
+                    const meta = globalCartMetadata[cartId] || { teacherName: 'Unassigned', roomNumber: '—' };
+                    
                     Object.keys(devices).forEach(slotId => {
                         const dev = devices[slotId];
                         let status = dev.status || 'In Cart';
@@ -408,9 +484,12 @@
                         if (status === 'Missing') badgeStyle = "bg-orange-50 text-orange-700 border-orange-100";
                         if (status === 'Repair') badgeStyle = "bg-rose-50 text-rose-700 border-rose-100";
 
+                        let locationString = cartId === 'Unassigned-Loose-Devices' ? 'Loose Vault stock' : `${meta.teacherName} (${meta.roomNumber})`;
+
                         tr.innerHTML = `
                             <td class="p-4 font-mono font-bold text-gray-900">${displayAsset}</td>
                             <td class="p-4 text-gray-500 font-medium">${cartId.replace(/-/g, ' ')} (Slot ${dev.number})</td>
+                            <td class="p-4 text-gray-600 font-semibold">${locationString}</td>
                             <td class="p-4 text-gray-600 font-semibold">${dev.assignedTo || '—'}</td>
                             <td class="p-4 text-center">
                                 <span class="px-2.5 py-1 text-xs font-bold rounded-md border ${badgeStyle}">${status}</span>
