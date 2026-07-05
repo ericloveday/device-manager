@@ -22,7 +22,7 @@
             <p class="text-xs opacity-90">K-12 Chromebook Management Portal</p>
         </div>
         <div class="text-right">
-            <span id="current-view" class="bg-black/20 px-3 py-1 rounded-full text-xs font-semibold">Classroom Cart Mode</span>
+            <span id="current-view" class="bg-black/20 px-3 py-1 rounded-full text-xs font-semibold">Live Database Mode</span>
         </div>
     </header>
 
@@ -65,23 +65,41 @@
             <div class="flex justify-between items-center mb-4">
                 <div>
                     <h2 class="text-lg font-bold text-gray-900">Classroom Cart Visualizer</h2>
-                    <p class="text-sm text-gray-500">Select a slot to quickly log issues, mark missing, or view user history</p>
+                    <p class="text-sm text-gray-500">Select a slot to quickly toggle status or report an issue</p>
                 </div>
-                <select class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#c80206]">
-                    <option>7th Grade - Cart A</option>
-                    <option>7th Grade - Cart B</option>
-                    <option>6th Grade - Cart A</option>
-                    <option>5th Grade - Room 101</option>
+                <select id="cart-selector" onchange="loadCartData()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#c80206]">
+                    <option value="7th-Grade-Cart-A">7th Grade - Cart A</option>
+                    <option value="7th-Grade-Cart-B">7th Grade - Cart B</option>
+                    <option value="6th-Grade-Cart-A">6th Grade - Cart A</option>
                 </select>
             </div>
 
             <div id="cart-grid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-3">
-                </div>
+                <div class="col-span-full text-center py-8 text-gray-400 text-sm">Connecting to Firebase...</div>
+            </div>
         </section>
 
     </main>
 
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
     <script>
+        // Your real Firebase Configuration Details
+        const firebaseConfig = {
+            apiKey: "PASTE_YOUR_API_KEY_HERE",
+            authDomain: "cca-device-manager.firebaseapp.com",
+            databaseURL: "https://cca-device-manager-default-rtdb.firebaseio.com",
+            projectId: "cca-device-manager",
+            storageBucket: "cca-device-manager.appspot.com",
+            messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID_HERE",
+            appId: "PASTE_YOUR_APP_ID_HERE"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         let currentMode = 'checkout';
 
         function setMode(mode) {
@@ -105,40 +123,65 @@
             }
         }
 
-        // Generate 30 dummy slots for the classroom cart preview
-        const gridContainer = document.getElementById('cart-grid');
-        for (let i = 1; i <= 30; i++) {
-            const slot = document.createElement('button');
+        // Load Cart Data Dynamically from Firebase Realtime Database
+        function loadCartData() {
+            const selectedCart = document.getElementById('cart-selector').value;
+            const gridContainer = document.getElementById('cart-grid');
             
-            // Default: In Cart (Green)
-            let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
-            let statusText = "In Cart";
-            
-            // Varying statuses for visual preview
-            if (i === 4 || i === 18) {
-                // NEW: Missing State (Orange/Amber)
-                statusColor = "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100";
-                statusText = "Missing";
-            } else if (i === 7 || i === 22) {
-                // Out State (Yellow)
-                statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
-                statusText = "Out";
-            } else if (i === 13) {
-                // Repair State (Red)
-                statusColor = "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100";
-                statusText = "Repair";
-            }
+            database.ref('carts/' + selectedCart).on('value', (snapshot) => {
+                gridContainer.innerHTML = ''; 
+                const data = snapshot.val();
+                
+                if (!data) {
+                    initializeEmptyCart(selectedCart);
+                    return;
+                }
 
-            slot.className = `flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${statusColor}`;
-            slot.innerHTML = `
-                <span class="text-xs font-bold uppercase tracking-wider opacity-60">Slot</span>
-                <span class="text-xl font-black">${i}</span>
-                <span class="text-[10px] font-bold mt-1 uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-white/60">${statusText}</span>
-            `;
-            
-            slot.onclick = () => alert(`You clicked Cart Slot #${i} (${statusText}). Later, we can program this to toggle between states or update Firebase!`);
-            gridContainer.appendChild(slot);
+                Object.keys(data).forEach((slotId) => {
+                    const slotData = data[slotId];
+                    const slotElement = document.createElement('button');
+                    
+                    let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
+                    if (slotData.status === 'Missing') statusColor = "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100";
+                    if (slotData.status === 'Out') statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
+                    if (slotData.status === 'Repair') statusColor = "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100";
+
+                    slotElement.className = `flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${statusColor}`;
+                    slotElement.innerHTML = `
+                        <span class="text-xs font-bold uppercase tracking-wider opacity-60">Slot</span>
+                        <span class="text-xl font-black">${slotData.number}</span>
+                        <span class="text-[10px] font-bold mt-1 uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-white/60">${slotData.status}</span>
+                    `;
+                    
+                    slotElement.onclick = () => {
+                        let nextStatus = 'In Cart';
+                        if (slotData.status === 'In Cart') nextStatus = 'Out';
+                        else if (slotData.status === 'Out') nextStatus = 'Missing';
+                        else if (slotData.status === 'Missing') nextStatus = 'Repair';
+                        
+                        database.ref('carts/' + selectedCart + '/' + slotId).update({
+                            status: nextStatus
+                        });
+                    };
+                    
+                    gridContainer.appendChild(slotElement);
+                });
+            });
         }
+
+        function initializeEmptyCart(cartId) {
+            const initialData = {};
+            for (let i = 1; i <= 30; i++) {
+                initialData['slot_' + i] = {
+                    number: i,
+                    status: 'In Cart',
+                    assignedTo: ''
+                };
+            }
+            database.ref('carts/' + cartId).set(initialData);
+        }
+
+        loadCartData();
     </script>
 </body>
 </html>
