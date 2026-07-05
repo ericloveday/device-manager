@@ -123,7 +123,7 @@
             }
         }
 
-        // Load Cart Data Dynamically from Firebase Realtime Database
+       // Load Cart Data Dynamically from Firebase Realtime Database
         function loadCartData() {
             const selectedCart = document.getElementById('cart-selector').value;
             const gridContainer = document.getElementById('cart-grid');
@@ -137,7 +137,15 @@
                     return;
                 }
 
-                Object.keys(data).forEach((slotId) => {
+                // FIX: Sort the slot keys numerically instead of alphabetically
+                const sortedKeys = Object.keys(data).sort((a, b) => {
+                    const numA = parseInt(a.replace('slot_', ''), 10);
+                    const numB = parseInt(b.replace('slot_', ''), 10);
+                    return numA - numB;
+                });
+
+                // Loop through the cleanly sorted slots
+                sortedKeys.forEach((slotId) => {
                     const slotData = data[slotId];
                     const slotElement = document.createElement('button');
                     
@@ -168,7 +176,6 @@
                 });
             });
         }
-
         function initializeEmptyCart(cartId) {
             const initialData = {};
             for (let i = 1; i <= 30; i++) {
