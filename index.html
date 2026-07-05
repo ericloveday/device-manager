@@ -87,16 +87,16 @@
                 </div>
                 <select id="cart-selector" onchange="loadCartData()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#c80206]">
                     <optgroup label="7th Grade Carts">
-                        <option value="7th-Grade-Cart-A">7th Grade - Cart A</option>
-                        <option value="7th-Grade-Cart-B">7th Grade - Cart B</option>
-                        <option value="7th-Grade-Cart-C">7th Grade - Cart C</option>
-                        <option value="7th-Grade-Cart-D">7th Grade - Cart D</option>
+                        <option id="opt-7th-Grade-Cart-A" value="7th-Grade-Cart-A">7th Grade - Cart A</option>
+                        <option id="opt-7th-Grade-Cart-B" value="7th-Grade-Cart-B">7th Grade - Cart B</option>
+                        <option id="opt-7th-Grade-Cart-C" value="7th-Grade-Cart-C">7th Grade - Cart C</option>
+                        <option id="opt-7th-Grade-Cart-D" value="7th-Grade-Cart-D">7th Grade - Cart D</option>
                     </optgroup>
                     <optgroup label="6th Grade Carts">
-                        <option value="6th-Grade-Cart-A">6th Grade - Cart A</option>
-                        <option value="6th-Grade-Cart-B">6th Grade - Cart B</option>
-                        <option value="6th-Grade-Cart-C">6th Grade - Cart C</option>
-                        <option value="6th-Grade-Cart-D">6th Grade - Cart D</option>
+                        <option id="opt-6th-Grade-Cart-A" value="6th-Grade-Cart-A">6th Grade - Cart A</option>
+                        <option id="opt-6th-Grade-Cart-B" value="6th-Grade-Cart-B">6th Grade - Cart B</option>
+                        <option id="opt-6th-Grade-Cart-C" value="6th-Grade-Cart-C">6th Grade - Cart C</option>
+                        <option id="opt-6th-Grade-Cart-D" value="6th-Grade-Cart-D">6th Grade - Cart D</option>
                     </optgroup>
                     <optgroup label="Standalone">
                         <option value="Unassigned-Loose-Devices">Loose / Vault Devices</option>
@@ -118,7 +118,7 @@
             
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Select Cart</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Select Cart Target</label>
                     <select id="meta-cart-select" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#c80206]">
                         <option value="7th-Grade-Cart-A">7th Grade - Cart A</option>
                         <option value="7th-Grade-Cart-B">7th Grade - Cart B</option>
@@ -222,12 +222,13 @@
         const database = firebase.database();
 
         let currentMode = 'checkout';
-        let globalCartMetadata = {}; // Locally cached metadata object
+        let globalCartMetadata = {}; 
 
         // Fetch global assignment registry on boot
         database.ref('cart_metadata').on('value', (snapshot) => {
             globalCartMetadata = snapshot.val() || {};
             updateCartMetaLabel();
+            updateDropdownLabels(); // Re-render visual text handles dynamically
         });
 
         function switchView(target) {
@@ -292,6 +293,20 @@
                 alert("Cart assignment saved successfully!");
                 document.getElementById('meta-teacher-input').value = '';
                 document.getElementById('meta-room-input').value = '';
+            });
+        }
+
+        // Swaps basic IDs out with "6th/7th Grade - Teacher Name" dynamically
+        function updateDropdownLabels() {
+            Object.keys(globalCartMetadata).forEach(cartId => {
+                const meta = globalCartMetadata[cartId];
+                const optionEl = document.getElementById('opt-' + cartId);
+                
+                if (optionEl && meta && meta.teacherName && meta.teacherName !== 'Unassigned') {
+                    let parts = cartId.split('-');
+                    let gradePrefix = parts[0] + " " + parts[1]; // Converts '7th-Grade-Cart-A' to '7th Grade'
+                    optionEl.innerText = `${gradePrefix} - ${meta.teacherName}`;
+                }
             });
         }
 
@@ -484,11 +499,17 @@
                         if (status === 'Missing') badgeStyle = "bg-orange-50 text-orange-700 border-orange-100";
                         if (status === 'Repair') badgeStyle = "bg-rose-50 text-rose-700 border-rose-100";
 
+                        let displayCartName = cartId.replace(/-/g, ' ');
+                        if (meta && meta.teacherName && meta.teacherName !== 'Unassigned') {
+                            let parts = cartId.split('-');
+                            displayCartName = parts[0] + " " + parts[1] + " (" + meta.teacherName + ")";
+                        }
+
                         let locationString = cartId === 'Unassigned-Loose-Devices' ? 'Loose Vault stock' : `${meta.teacherName} (${meta.roomNumber})`;
 
                         tr.innerHTML = `
                             <td class="p-4 font-mono font-bold text-gray-900">${displayAsset}</td>
-                            <td class="p-4 text-gray-500 font-medium">${cartId.replace(/-/g, ' ')} (Slot ${dev.number})</td>
+                            <td class="p-4 text-gray-500 font-medium">${displayCartName} (Slot ${dev.number})</td>
                             <td class="p-4 text-gray-600 font-semibold">${locationString}</td>
                             <td class="p-4 text-gray-600 font-semibold">${dev.assignedTo || '—'}</td>
                             <td class="p-4 text-center">
