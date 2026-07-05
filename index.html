@@ -26,7 +26,7 @@
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+    <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
 
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-100 pb-4 mb-4 gap-4">
@@ -62,7 +62,7 @@
         </section>
 
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-lg font-bold text-gray-900">Classroom Cart Visualizer</h2>
                     <p class="text-sm text-gray-500">Select a slot to quickly toggle status or report an issue</p>
@@ -74,7 +74,7 @@
                 </select>
             </div>
 
-            <div id="cart-grid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-3">
+            <div id="cart-grid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-15 gap-2.5">
                 <div class="col-span-full text-center py-8 text-gray-400 text-sm">Connecting to Firebase...</div>
             </div>
         </section>
@@ -86,16 +86,16 @@
 
     <script>
         // Your real Firebase Configuration Details
-       const firebaseConfig = {
-  apiKey: "AIzaSyDgMaA57Lr8nzf8tj2VUaTCMUeKQuVExFk",
-  authDomain: "cca-device-manager.firebaseapp.com",
-  projectId: "cca-device-manager",
-  databaseURL: "https://cca-device-manager-default-rtdb.firebaseio.com/",
-  storageBucket: "cca-device-manager.firebasestorage.app",
-  messagingSenderId: "928900813459",
-  appId: "1:928900813459:web:0085cf44d145d0db43b366",
-  measurementId: "G-NMQKPD0B0X"
-};
+        const firebaseConfig = {
+            apiKey: "PASTE_YOUR_API_KEY_HERE",
+            authDomain: "cca-device-manager.firebaseapp.com",
+            databaseURL: "https://cca-device-manager-default-rtdb.firebaseio.com/",
+            projectId: "cca-device-manager",
+            storageBucket: "cca-device-manager.appspot.com",
+            messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID_HERE",
+            appId: "PASTE_YOUR_APP_ID_HERE"
+        };
+
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
@@ -123,7 +123,7 @@
             }
         }
 
-       // Load Cart Data Dynamically from Firebase Realtime Database
+        // Load Cart Data Dynamically from Firebase Realtime Database
         function loadCartData() {
             const selectedCart = document.getElementById('cart-selector').value;
             const gridContainer = document.getElementById('cart-grid');
@@ -137,35 +137,38 @@
                     return;
                 }
 
-                // FIX: Sort the slot keys numerically instead of alphabetically
+                // Sort keys numerically to maintain sequence
                 const sortedKeys = Object.keys(data).sort((a, b) => {
                     const numA = parseInt(a.replace('slot_', ''), 10);
                     const numB = parseInt(b.replace('slot_', ''), 10);
                     return numA - numB;
                 });
 
-                // Loop through the cleanly sorted slots
                 sortedKeys.forEach((slotId) => {
                     const slotData = data[slotId];
                     const slotElement = document.createElement('button');
                     
+                    // Legacy database cleanup: if status is old 'Out', treat it cleanly as 'Signed Out'
+                    let currentStatus = slotData.status;
+                    if (currentStatus === 'Out') currentStatus = 'Signed Out';
+                    
                     let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
-                    if (slotData.status === 'Missing') statusColor = "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100";
-                    if (slotData.status === 'Out') statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
-                    if (slotData.status === 'Repair') statusColor = "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100";
+                    if (currentStatus === 'Missing') statusColor = "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100";
+                    if (currentStatus === 'Signed Out') statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
+                    if (currentStatus === 'Repair') statusColor = "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100";
 
-                    slotElement.className = `flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${statusColor}`;
+                    slotElement.className = `flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${statusColor} min-h-[76px]`;
                     slotElement.innerHTML = `
-                        <span class="text-xs font-bold uppercase tracking-wider opacity-60">Slot</span>
-                        <span class="text-xl font-black">${slotData.number}</span>
-                        <span class="text-[10px] font-bold mt-1 uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-white/60">${slotData.status}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Slot</span>
+                        <span class="text-lg font-black leading-none my-0.5">${slotData.number}</span>
+                        <span class="text-[9px] font-bold uppercase tracking-wide px-1 py-0.5 rounded bg-white/60 text-center w-full truncate">${currentStatus}</span>
                     `;
                     
                     slotElement.onclick = () => {
                         let nextStatus = 'In Cart';
-                        if (slotData.status === 'In Cart') nextStatus = 'Out';
-                        else if (slotData.status === 'Out') nextStatus = 'Missing';
-                        else if (slotData.status === 'Missing') nextStatus = 'Repair';
+                        if (currentStatus === 'In Cart') nextStatus = 'Signed Out';
+                        else if (currentStatus === 'Signed Out') nextStatus = 'Missing';
+                        else if (currentStatus === 'Missing') nextStatus = 'Repair';
                         
                         database.ref('carts/' + selectedCart + '/' + slotId).update({
                             status: nextStatus
@@ -176,6 +179,7 @@
                 });
             });
         }
+
         function initializeEmptyCart(cartId) {
             const initialData = {};
             for (let i = 1; i <= 30; i++) {
