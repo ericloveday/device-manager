@@ -38,16 +38,16 @@
             <h3 class="text-sm font-black uppercase tracking-wider text-red-400 mb-2">💡 Quick Instructions: How to Use the Cart View</h3>
             <ul class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs opacity-90 font-medium">
                 <li class="bg-white/5 p-2.5 rounded-lg border border-white/10">
-                    <strong class="text-white block mb-0.5">🟢 Green Slots (Normal Operations):</strong> 
-                    Shows the pre-assigned permanent student for this class period. No typing required!
+                    <strong class="text-white block mb-0.5">🟢 Green Slots (Standard):</strong> 
+                    Displays your permanent roster seat assignment. No action needed!
                 </li>
                 <li class="bg-white/5 p-2.5 rounded-lg border border-white/10">
-                    <strong class="text-white block mb-0.5">🔄 Direct Status Jumps:</strong> 
-                    Click any slot to pull up a quick action menu. Change or assign any exception status instantly without scrolling through menus.
+                    <strong class="text-white block mb-0.5">🔄 Dropdown Selectors:</strong> 
+                    Use the status selector on any slot card to instantly change its status without dealing with confusing loops.
                 </li>
                 <li class="bg-white/5 p-2.5 rounded-lg border border-white/10">
-                    <strong class="text-white block mb-0.5">↩️ Quick Check-In:</strong> 
-                    Clicking a device that is currently marked out will immediately ask if it's back in the cart to clear it out fast.
+                    <strong class="text-white block mb-0.5">🏷️ Map Asset Tags:</strong> 
+                    Click directly on the card background (outside of the dropdown) to change or update a slot's asset barcode number.
                 </li>
             </ul>
         </section>
@@ -345,22 +345,21 @@
 
                 sortedKeys.forEach((slotId) => {
                     const slotData = data[slotId];
-                    const slotElement = document.createElement('button');
+                    const slotElement = document.createElement('div');
                     
                     let currentStatus = slotData.status || 'In Cart';
                     let tempBorrower = slotData.temporaryBorrower || '';
                     let activeAsset = slotData.assetTag || 'Unmapped';
                     let assignedStudent = slotData[currentPeriod] || '— Open Seat —';
                     
-                    let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"; 
-                    let badgeLabel = currentStatus;
+                    let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200"; 
 
-                    if (currentStatus === 'Temp Out') statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
-                    if (currentStatus === 'Overnight') statusColor = "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100";
-                    if (currentStatus === 'Missing') statusColor = "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100";
-                    if (currentStatus === 'Repair') statusColor = "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100";
+                    if (currentStatus === 'Temp Out') statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200";
+                    if (currentStatus === 'Overnight') statusColor = "bg-purple-50 text-purple-700 border-purple-200";
+                    if (currentStatus === 'Missing') statusColor = "bg-orange-50 text-orange-700 border-orange-200";
+                    if (currentStatus === 'Repair') statusColor = "bg-rose-50 text-rose-700 border-rose-200";
 
-                    slotElement.className = `flex flex-col items-center justify-between p-2.5 rounded-xl border transition-all ${statusColor} min-h-[115px] text-center cursor-pointer select-none shadow-xs`;
+                    slotElement.className = `flex flex-col items-center justify-between p-2.5 rounded-xl border transition-all ${statusColor} min-h-[135px] text-center shadow-xs`;
                     
                     let middleDisplay = '';
                     if (currentStatus === 'In Cart') {
@@ -374,84 +373,67 @@
                     }
 
                     slotElement.innerHTML = `
-                        <div>
-                            <span class="text-[8px] font-bold uppercase tracking-wider opacity-40 block leading-none">Slot</span>
-                            <span class="text-lg font-black leading-none">${slotData.number}</span>
+                        <div class="w-full flex justify-between items-start cursor-pointer" onclick="handleCardClick('${selectedCart}', '${slotId}', '${activeAsset}', '${slotData.number}')">
+                            <div>
+                                <span class="text-[8px] font-bold uppercase tracking-wider opacity-40 block leading-none text-left">Slot</span>
+                                <span class="text-lg font-black leading-none">${slotData.number}</span>
+                            </div>
+                            <span class="text-[8px] opacity-40 font-mono block truncate max-w-[65px]">#${activeAsset}</span>
                         </div>
-                        ${middleDisplay}
+                        
+                        <div class="w-full my-1.5">
+                            ${middleDisplay}
+                        </div>
+                        
                         <div class="w-full">
-                            <span class="text-[8px] opacity-40 font-mono block truncate mb-0.5">#${activeAsset}</span>
-                            <span class="text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded bg-white text-center w-full block truncate shadow-2xs">${badgeLabel === 'In Cart' ? '✅ In Cart' : badgeLabel}</span>
+                            <select onchange="handleDropdownStatusChange(this, '${selectedCart}', '${slotId}', '${tempBorrower}', '${assignedStudent}')" 
+                                    class="w-full text-[10px] font-black uppercase tracking-wide px-1 py-1 rounded bg-white text-center border border-gray-200 focus:outline-none shadow-2xs cursor-pointer">
+                                <option value="In Cart" ${currentStatus === 'In Cart' ? 'selected' : ''}>✅ In Cart</option>
+                                <option value="Temp Out" ${currentStatus === 'Temp Out' ? 'selected' : ''}>🔄 Temp Out</option>
+                                <option value="Overnight" ${currentStatus === 'Overnight' ? 'selected' : ''}>🏠 Overnight</option>
+                                <option value="Missing" ${currentStatus === 'Missing' ? 'selected' : ''}>⚠️ Missing</option>
+                                <option value="Repair" ${currentStatus === 'Repair' ? 'selected' : ''}>🔧 Repair</option>
+                            </select>
                         </div>
                     `;
-                    
-                    slotElement.onclick = () => {
-                        if (activeAsset === 'Unmapped') {
-                            let userPrompt = prompt(`Configure Permanent Asset barcode text label for Slot ${slotData.number}:`, '');
-                            if (userPrompt !== null && userPrompt.trim() !== '') {
-                                database.ref(`carts/${selectedCart}/${slotId}`).update({ assetTag: userPrompt.trim() });
-                            }
-                            return;
-                        }
-
-                        // NEW INTERACTION FLOW: Direct Check-in Prompt
-                        if (currentStatus !== 'In Cart') {
-                            let isReturned = confirm(`Has Device #${activeAsset} (Slot ${slotData.number}) been returned to the cart?`);
-                            if (isReturned) {
-                                database.ref(`carts/${selectedCart}/${slotId}`).update({
-                                    status: 'In Cart',
-                                    temporaryBorrower: ''
-                                });
-                                return;
-                            }
-                        }
-
-                        // NEW JUMP ACTION MENU: Quick direct selection
-                        let choice = prompt(
-                            `Select an action for Slot ${slotData.number}:\n\n` +
-                            `1️⃣ Mark as TEMPORARY BORROWER\n` +
-                            `2️⃣ Mark as OVERNIGHT LOAN\n` +
-                            `3️⃣ Flag as MISSING\n` +
-                            `4️⃣ Route to REPAIR SHOP\n` +
-                            `5️⃣ Reset to standard IN CART status\n\n` +
-                            `Type a number (1-5):`, ""
-                        );
-
-                        if (choice === null || choice.trim() === "") return;
-                        choice = choice.trim();
-
-                        let nextStatus = 'In Cart';
-                        let nextBorrower = '';
-
-                        if (choice === '1') {
-                            nextStatus = 'Temp Out';
-                            let p = prompt(`[Temp Borrow Flag] Enter the name of the student borrowing this device:`, tempBorrower);
-                            if (p === null) return;
-                            nextBorrower = p.trim() || 'Temporary Student';
-                        } else if (choice === '2') {
-                            nextStatus = 'Overnight';
-                            let p = prompt(`[Overnight Flag] Verify student name taking this home overnight:`, tempBorrower || assignedStudent);
-                            if (p === null) return;
-                            nextBorrower = p.trim() || assignedStudent || 'Overnight Loan';
-                        } else if (choice === '3') {
-                            nextStatus = 'Missing';
-                        } else if (choice === '4') {
-                            nextStatus = 'Repair';
-                        } else if (choice === '5') {
-                            nextStatus = 'In Cart';
-                        } else {
-                            alert("Invalid selection. No changes made.");
-                            return;
-                        }
-
-                        database.ref(`carts/${selectedCart}/${slotId}`).update({
-                            status: nextStatus,
-                            temporaryBorrower: nextBorrower
-                        });
-                    };
                     gridContainer.appendChild(slotElement);
                 });
             });
+        }
+
+        // Dropdown Selection Logic Engine
+        function handleDropdownStatusChange(selectEl, selectedCart, slotId, currentBorrower, assignedStudent) {
+            const nextStatus = selectEl.value;
+            let nextBorrower = '';
+
+            if (nextStatus === 'Temp Out') {
+                let p = prompt(`[Temp Borrow Flag] Enter student name borrowing this device:`, currentBorrower || '');
+                if (p === null) { loadCartData(); return; } // cancel operation completely
+                nextBorrower = p.trim() || 'Temporary Student';
+            } else if (nextStatus === 'Overnight') {
+                let p = prompt(`[Overnight Flag] Verify student name taking this device home:`, currentBorrower || assignedStudent);
+                if (p === null) { loadCartData(); return; } 
+                nextBorrower = p.trim() || assignedStudent || 'Overnight Loan';
+            } else if (nextStatus === 'In Cart') {
+                nextBorrower = '';
+            } else {
+                nextBorrower = currentBorrower; // Maintain meta fields for logs if moving into repair/missing
+            }
+
+            database.ref(`carts/${selectedCart}/${slotId}`).update({
+                status: nextStatus,
+                temporaryBorrower: nextBorrower
+            });
+        }
+
+        // Direct clicking fallback for setting/updating asset tags safely
+        function handleCardClick(selectedCart, slotId, activeAsset, slotNum) {
+            if (activeAsset === 'Unmapped' || confirm(`Would you like to change the asset tag label for Slot ${slotNum}?`)) {
+                let userPrompt = prompt(`Configure Permanent Asset barcode text label for Slot ${slotNum}:`, activeAsset === 'Unmapped' ? '' : activeAsset);
+                if (userPrompt !== null && userPrompt.trim() !== '') {
+                    database.ref(`carts/${selectedCart}/${slotId}`).update({ assetTag: userPrompt.trim() });
+                }
+            }
         }
 
         function loadRosterEditor() {
@@ -530,6 +512,8 @@
                         else if (status === 'Overnight') countOvernight++;
                         else if (status === 'Missing') countMissing++;
                         else if (status === 'Repair') countRepair++;
+
+                        if(!tableBody) return;
 
                         const tr = document.createElement('tr');
                         tr.className = "hover:bg-gray-50/80 transition-colors";
