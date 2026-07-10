@@ -252,10 +252,10 @@
         }
 
         function setMode(mode) {
-            currentMode = mode;
             const btnCheckout = document.getElementById('btn-checkout');
             const btnOvernight = document.getElementById('btn-overnight');
             const btnCheckin = document.getElementById('btn-checkin');
+            currentMode = mode;
             
             [btnCheckout, btnOvernight, btnCheckin].forEach(btn => {
                 btn.className = "px-3 py-1.5 text-xs md:text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-900 transition-all";
@@ -325,6 +325,16 @@
             }
         }
 
+        // Helper helper to format raw database keys to pretty names
+        function getFriendlyCartName(cartId) {
+            const meta = globalCartMetadata[cartId];
+            if (meta && meta.teacherName && meta.teacherName !== 'Unassigned') {
+                let parts = cartId.split('-'); // e.g., ["7th", "Grade", "Cart", "A"]
+                return `${parts[0]} ${parts[1]} ${meta.teacherName}`; // e.g., "7th Grade Loveday"
+            }
+            return cartId.replace(/-/g, ' ');
+        }
+
         function processTransaction() {
             const studentName = document.getElementById('student-input').value.trim();
             const scannedAsset = document.getElementById('asset-input').value.trim();
@@ -364,7 +374,8 @@
                         status: targetStatus,
                         assignedTo: assignedUser
                     }).then(() => {
-                        showFeedback(`Auto-Routed: Mapped Asset Tag into ${foundCart.replace(/-/g, ' ')} Slot ${foundSlotNumber}.`, "bg-emerald-50 text-emerald-700 border border-emerald-200");
+                        let friendlyName = getFriendlyCartName(foundCart);
+                        showFeedback(`Auto-Routed: Mapped Asset Tag into ${friendlyName} Slot ${foundSlotNumber}.`, "bg-emerald-50 text-emerald-700 border border-emerald-200");
                         document.getElementById('student-input').value = '';
                         document.getElementById('asset-input').value = '';
                     });
@@ -463,7 +474,8 @@
                                 database.ref(`carts/Unassigned-Loose-Devices/${slotId}`).remove();
                             }
                         } else if (activeAsset === 'Unmapped') {
-                            let userPrompt = prompt(`Configure Asset Tag for ${selectedCart.replace(/-/g, ' ')} Slot ${slotData.number}:\n\nEnter barcode text:`, '');
+                            let customTitle = getFriendlyCartName(selectedCart);
+                            let userPrompt = prompt(`Configure Asset Tag for ${customTitle} Slot ${slotData.number}:\n\nEnter barcode text:`, '');
                             if (userPrompt !== null && userPrompt.trim() !== '') {
                                 database.ref(`carts/${selectedCart}/${slotId}`).update({
                                     assetTag: userPrompt.trim()
@@ -477,7 +489,8 @@
         }
 
         function adminEditAsset(cartId, slotId, currentAsset, slotNumber) {
-            let userPrompt = prompt(`Admin Editor — Update Asset Tag for ${cartId.replace(/-/g, ' ')} (Slot ${slotNumber}):\n\nEnter corrected barcode text:`, currentAsset === 'Unmapped' ? '' : currentAsset);
+            let customTitle = getFriendlyCartName(cartId);
+            let userPrompt = prompt(`Admin Editor — Update Asset Tag for ${customTitle} (Slot ${slotNumber}):\n\nEnter corrected barcode text:`, currentAsset === 'Unmapped' ? '' : currentAsset);
             if (userPrompt !== null) {
                 let updatedValue = userPrompt.trim() || 'Unmapped';
                 database.ref(`carts/${cartId}/${slotId}`).update({
@@ -519,12 +532,7 @@
                         if (status === 'Missing') badgeStyle = "bg-orange-50 text-orange-700 border-orange-100";
                         if (status === 'Repair') badgeStyle = "bg-rose-50 text-rose-700 border-rose-100";
 
-                        let displayCartName = cartId.replace(/-/g, ' ');
-                        if (meta && meta.teacherName && meta.teacherName !== 'Unassigned') {
-                            let parts = cartId.split('-');
-                            displayCartName = parts[0] + " " + parts[1] + " (" + meta.teacherName + ")";
-                        }
-
+                        let displayCartName = getFriendlyCartName(cartId);
                         let locationString = cartId === 'Unassigned-Loose-Devices' ? 'Loose Vault stock' : `${meta.teacherName} (${meta.roomNumber})`;
                         let slotNumberDisplay = dev.number || '';
 
