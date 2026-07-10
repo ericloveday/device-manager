@@ -33,21 +33,21 @@
     <!-- KIOSK / MAIN CLASSROOM VIEW -->
     <main id="view-kiosk-container" class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         
-        <!-- NEW QUICK INSTRUCTIONS CARD -->
+        <!-- QUICK INSTRUCTIONS CARD -->
         <section class="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-5 rounded-2xl shadow-md border border-gray-700">
             <h3 class="text-sm font-black uppercase tracking-wider text-red-400 mb-2">💡 Quick Instructions: How to Use the Cart View</h3>
             <ul class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs opacity-90 font-medium">
                 <li class="bg-white/5 p-2.5 rounded-lg border border-white/10">
                     <strong class="text-white block mb-0.5">🟢 Green Slots (Normal Operations):</strong> 
-                    Shows the name of your pre-assigned permanent student for this class period. No scanning or typing needed!
+                    Shows the pre-assigned permanent student for this class period. No typing required!
                 </li>
                 <li class="bg-white/5 p-2.5 rounded-lg border border-white/10">
-                    <strong class="text-white block mb-0.5">🔄 Handle Exceptions (Click Slots):</strong> 
-                    Click a slot to toggle its status. Safely log **Temporary Borrowers** or **Overnight Loans** without messing up your master class rosters.
+                    <strong class="text-white block mb-0.5">🔄 Direct Status Jumps:</strong> 
+                    Click any slot to pull up a quick action menu. Change or assign any exception status instantly without scrolling through menus.
                 </li>
                 <li class="bg-white/5 p-2.5 rounded-lg border border-white/10">
-                    <strong class="text-white block mb-0.5">📅 Change Periods & Rosters:</strong> 
-                    Use the class period dropdown to instantly rotate names. Head to the **Rosters & Dashboard** tab to edit permanent seat assignments.
+                    <strong class="text-white block mb-0.5">↩️ Quick Check-In:</strong> 
+                    Clicking a device that is currently marked out will immediately ask if it's back in the cart to clear it out fast.
                 </li>
             </ul>
         </section>
@@ -84,7 +84,7 @@
                         <optgroup label="6th Grade Classroom Carts">
                             <option id="opt-6th-Grade-Cart-A" value="6th-Grade-Cart-A">6th Grade - Cart A (Loading...)</option>
                             <option id="opt-6th-Grade-Cart-B" value="6th-Grade-Cart-B">6th Grade - Cart B (Loading...)</option>
-                            <option id="opt-6th-Grade-Cart-B" value="6th-Grade-Cart-C">6th Grade - Cart C (Loading...)</option>
+                            <option id="opt-6th-Grade-Cart-C" value="6th-Grade-Cart-C">6th Grade - Cart C (Loading...)</option>
                             <option id="opt-6th-Grade-Cart-D" value="6th-Grade-Cart-D">6th Grade - Cart D (Loading...)</option>
                         </optgroup>
                     </select>
@@ -224,7 +224,6 @@
             "6th-Grade-Cart-A", "6th-Grade-Cart-B", "6th-Grade-Cart-C", "6th-Grade-Cart-D"
         ];
 
-        // Sync and listen to Teacher assignment details
         database.ref('cart_metadata').on('value', (snapshot) => {
             globalCartMetadata = snapshot.val() || {};
             updateDropdownLabels();
@@ -246,6 +245,7 @@
 
         function syncRosterSelectorOptions() {
             const rSelector = document.getElementById('roster-cart-selector');
+            if (!rSelector) return;
             const currentVal = rSelector.value;
             rSelector.innerHTML = '';
             cartKeysList.forEach(key => {
@@ -265,7 +265,6 @@
             const grid = document.getElementById('teacher-assignment-grid');
             if(!grid || grid.innerHTML === undefined) return;
             
-            // Render spreadsheet style inputs on dashboard page
             let html = '';
             cartKeysList.forEach(key => {
                 const val = globalCartMetadata[key]?.teacherName || '';
@@ -295,6 +294,7 @@
         function updateCartMetaLabel() {
             const currentCart = document.getElementById('cart-selector').value;
             const metaDisplay = document.getElementById('cart-meta-display');
+            if(!metaDisplay) return;
             const activeTeacher = globalCartMetadata[currentCart]?.teacherName || "Unassigned";
             metaDisplay.innerHTML = `📍 Focus: <strong class="text-gray-900">${currentCart.replace(/-/g, ' ')}</strong> &nbsp;|&nbsp; Teacher Assigned: <strong class="text-red-700">${activeTeacher}</strong>`;
         }
@@ -350,8 +350,6 @@
                     let currentStatus = slotData.status || 'In Cart';
                     let tempBorrower = slotData.temporaryBorrower || '';
                     let activeAsset = slotData.assetTag || 'Unmapped';
-                    
-                    // Pull pre-assigned student based on chosen active viewing window period
                     let assignedStudent = slotData[currentPeriod] || '— Open Seat —';
                     
                     let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"; 
@@ -364,10 +362,8 @@
 
                     slotElement.className = `flex flex-col items-center justify-between p-2.5 rounded-xl border transition-all ${statusColor} min-h-[115px] text-center cursor-pointer select-none shadow-xs`;
                     
-                    // Central Workspace Text logic
                     let middleDisplay = '';
                     if (currentStatus === 'In Cart') {
-                        // Green status directly features the text label of your permanent student assignment 
                         middleDisplay = `<span class="text-[11px] font-black truncate w-full block text-emerald-950 bg-emerald-200/50 rounded py-1 px-1.5">${assignedStudent}</span>`;
                     } else if (currentStatus === 'Temp Out') {
                         middleDisplay = `<span class="text-[9px] font-medium truncate w-full block text-yellow-900 bg-white/60 rounded py-1 px-1.5">Borrowed By:<br><strong class="font-bold text-[10px]">${tempBorrower}</strong></span>`;
@@ -395,34 +391,63 @@
                             if (userPrompt !== null && userPrompt.trim() !== '') {
                                 database.ref(`carts/${selectedCart}/${slotId}`).update({ assetTag: userPrompt.trim() });
                             }
-                        } else {
-                            // Non-destructive Quick Click Rotating Exception Engine
-                            let nextStatus = 'In Cart';
-                            let nextBorrower = '';
-
-                            if (currentStatus === 'In Cart') {
-                                nextStatus = 'Temp Out';
-                                let p = prompt(`[Temp Borrow Flag] Enter the name of the random student borrowing this device:`, '');
-                                if (p === null) return; 
-                                nextBorrower = p.trim() || 'Temporary Student';
-                            } else if (currentStatus === 'Temp Out') {
-                                nextStatus = 'Overnight';
-                                let p = prompt(`[Overnight Flag] Verify student name taking this home overnight:`, tempBorrower || assignedStudent);
-                                if (p === null) return;
-                                nextBorrower = p.trim() || assignedStudent || 'Overnight Loan';
-                            } else if (currentStatus === 'Overnight') {
-                                nextStatus = 'Missing';
-                            } else if (currentStatus === 'Missing') {
-                                nextStatus = 'Repair';
-                            } else {
-                                nextStatus = 'In Cart';
-                            }
-
-                            database.ref(`carts/${selectedCart}/${slotId}`).update({
-                                status: nextStatus,
-                                temporaryBorrower: nextBorrower
-                            });
+                            return;
                         }
+
+                        // NEW INTERACTION FLOW: Direct Check-in Prompt
+                        if (currentStatus !== 'In Cart') {
+                            let isReturned = confirm(`Has Device #${activeAsset} (Slot ${slotData.number}) been returned to the cart?`);
+                            if (isReturned) {
+                                database.ref(`carts/${selectedCart}/${slotId}`).update({
+                                    status: 'In Cart',
+                                    temporaryBorrower: ''
+                                });
+                                return;
+                            }
+                        }
+
+                        // NEW JUMP ACTION MENU: Quick direct selection
+                        let choice = prompt(
+                            `Select an action for Slot ${slotData.number}:\n\n` +
+                            `1️⃣ Mark as TEMPORARY BORROWER\n` +
+                            `2️⃣ Mark as OVERNIGHT LOAN\n` +
+                            `3️⃣ Flag as MISSING\n` +
+                            `4️⃣ Route to REPAIR SHOP\n` +
+                            `5️⃣ Reset to standard IN CART status\n\n` +
+                            `Type a number (1-5):`, ""
+                        );
+
+                        if (choice === null || choice.trim() === "") return;
+                        choice = choice.trim();
+
+                        let nextStatus = 'In Cart';
+                        let nextBorrower = '';
+
+                        if (choice === '1') {
+                            nextStatus = 'Temp Out';
+                            let p = prompt(`[Temp Borrow Flag] Enter the name of the student borrowing this device:`, tempBorrower);
+                            if (p === null) return;
+                            nextBorrower = p.trim() || 'Temporary Student';
+                        } else if (choice === '2') {
+                            nextStatus = 'Overnight';
+                            let p = prompt(`[Overnight Flag] Verify student name taking this home overnight:`, tempBorrower || assignedStudent);
+                            if (p === null) return;
+                            nextBorrower = p.trim() || assignedStudent || 'Overnight Loan';
+                        } else if (choice === '3') {
+                            nextStatus = 'Missing';
+                        } else if (choice === '4') {
+                            nextStatus = 'Repair';
+                        } else if (choice === '5') {
+                            nextStatus = 'In Cart';
+                        } else {
+                            alert("Invalid selection. No changes made.");
+                            return;
+                        }
+
+                        database.ref(`carts/${selectedCart}/${slotId}`).update({
+                            status: nextStatus,
+                            temporaryBorrower: nextBorrower
+                        });
                     };
                     gridContainer.appendChild(slotElement);
                 });
@@ -454,7 +479,7 @@
                         <td class="p-1"><input type="text" value="${s.period_1 || ''}" placeholder="P1 Student..." class="p1-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none focus:bg-red-50/20"></td>
                         <td class="p-1"><input type="text" value="${s.period_2 || ''}" placeholder="P2 Student..." class="p2-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none focus:bg-red-50/20"></td>
                         <td class="p-1"><input type="text" value="${s.period_3 || ''}" placeholder="P3 Student..." class="p3-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none focus:bg-red-50/20"></td>
-                        <td class="p-1"><input type="text" value="${s.period_4 || ''}" placeholder="P4 Student..." class="p4-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none focus:bg-red-50/20"></td>
+                        <td class="p-1"><input type="text" value="${s.period_4 || ''}" placeholder="P4 Student..." class="p1-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none focus:bg-red-50/20"></td>
                     `;
                     tableBody.appendChild(tr);
                 });
