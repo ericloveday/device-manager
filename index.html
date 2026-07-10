@@ -444,7 +444,7 @@
                     if (currentStatus === 'Overnight') statusColor = "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100";
                     if (currentStatus === 'Available') statusColor = "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100";
 
-                    slotElement.className = `flex flex-col items-center justify-between p-2 rounded-xl border transition-all ${statusColor} min-h-[92px] text-center cursor-pointer`;
+                    slotElement.className = `flex flex-col items-center justify-between p-2 rounded-xl border transition-all ${statusColor} min-h-[92px] text-center cursor-pointer select-none`;
                     
                     let middleRow = currentUser 
                         ? `<span class="text-[9px] font-semibold truncate w-full block text-gray-700 bg-white/40 rounded px-0.5">${currentUser}</span>` 
@@ -475,43 +475,36 @@
                                 });
                             }
                         } else {
-                            // Mapped device quick status switcher selection prompt!
-                            let customTitle = getFriendlyCartName(selectedCart);
-                            let menuSelection = prompt(
-                                `Update Device Status for ${customTitle} (Slot ${slotData.number}):\n\n` +
-                                `Select status options:\n` +
-                                `1 = Available / In Cart\n` +
-                                `2 = Out to Student\n` +
-                                `3 = Overnight Loan\n` +
-                                `4 = Missing Flags\n` +
-                                `5 = In Repair Shop\n\n` +
-                                `Enter choice number (1-5):`, 
-                                (currentStatus === 'In Cart' || currentStatus === 'Available') ? '1' : 
-                                currentStatus === 'Out' ? '2' : 
-                                currentStatus === 'Overnight' ? '3' : 
-                                currentStatus === 'Missing' ? '4' : '5'
-                            );
+                            // Instant status cycle engine!
+                            let nextStatus = 'In Cart';
+                            let nextStudent = '';
 
-                            if (menuSelection !== null) {
-                                let newStatus = 'In Cart';
-                                let newStudent = '';
-
-                                if (menuSelection === '2' || menuSelection === '3') {
-                                    newStatus = (menuSelection === '2') ? 'Out' : 'Overnight';
-                                    let studentPrompt = prompt(`Enter student name assignment for this device:`, currentUser);
-                                    if (studentPrompt === null) return; // cancel update entirely
-                                    newStudent = studentPrompt.trim() || 'Assigned Student';
-                                } else if (menuSelection === '4') {
-                                    newStatus = 'Missing';
-                                } else if (menuSelection === '5') {
-                                    newStatus = 'Repair';
-                                }
-
-                                database.ref(`carts/${selectedCart}/${slotId}`).update({
-                                    status: newStatus,
-                                    assignedTo: newStudent
-                                });
+                            // Determine what comes next based on where it currently is
+                            if (currentStatus === 'In Cart' || currentStatus === 'Available') {
+                                nextStatus = 'Out';
+                                let studentPrompt = prompt(`Switching to Out to Student. Enter student name:`, currentUser);
+                                if (studentPrompt === null) return; // cancel rotation if clicked cancel
+                                nextStudent = studentPrompt.trim() || 'Assigned Student';
+                            } else if (currentStatus === 'Out') {
+                                nextStatus = 'Overnight';
+                                let studentPrompt = prompt(`Switching to Overnight Loan. Confirm or change student name:`, currentUser);
+                                if (studentPrompt === null) return;
+                                nextStudent = studentPrompt.trim() || currentUser || 'Assigned Student';
+                            } else if (currentStatus === 'Overnight') {
+                                nextStatus = 'Missing';
+                                nextStudent = ''; // clears out name completely
+                            } else if (currentStatus === 'Missing') {
+                                nextStatus = 'Repair';
+                                nextStudent = '';
+                            } else {
+                                nextStatus = 'In Cart'; // Loops right back home
+                                nextStudent = '';
                             }
+
+                            database.ref(`carts/${selectedCart}/${slotId}`).update({
+                                status: nextStatus,
+                                assignedTo: nextStudent
+                            });
                         }
                     };
                     gridContainer.appendChild(slotElement);
@@ -619,7 +612,6 @@
             }
         }
 
-        // Sets up 30 default grids if a cart path is totally blank inside firebase
         function initializeEmptyCart(cartId) {
             if (cartId === 'Unassigned-Loose-Devices') return;
             
