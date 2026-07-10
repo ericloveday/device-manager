@@ -150,7 +150,7 @@
             <div class="sm:flex sm:items-center sm:justify-between border-b border-gray-100 pb-5 mb-5">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Building-Wide Master Fleet Audit</h2>
-                    <p class="text-sm text-gray-500">Real-time status tracking of all mapped asset numbers</p>
+                    <p class="text-sm text-gray-500">Real-time status tracking and asset tagging management</p>
                 </div>
                 <div class="mt-4 sm:mt-0 flex gap-2">
                     <input type="text" id="admin-search-input" onkeyup="filterAdminTable()" placeholder="Search asset, teacher, room, status..." 
@@ -190,11 +190,12 @@
                             <th class="p-4">Owner Assignment</th>
                             <th class="p-4">Current User Status</th>
                             <th class="p-4 text-center">Status Label</th>
+                            <th class="p-4 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="admin-table-body" class="divide-y divide-gray-50">
                         <tr>
-                            <td colspan="5" class="p-8 text-center text-gray-400">Loading master building registers...</td>
+                            <td colspan="6" class="p-8 text-center text-gray-400">Loading master building registers...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -206,7 +207,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <script>
-        // Your real Firebase Configuration Details
         const firebaseConfig = {
             apiKey: "PASTE_YOUR_API_KEY_HERE",
             authDomain: "cca-device-manager.firebaseapp.com",
@@ -217,7 +217,6 @@
             appId: "PASTE_YOUR_APP_ID_HERE"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
@@ -225,7 +224,6 @@
         let globalCartMetadata = {}; 
         let activeCartRef = null;
 
-        // Fetch global assignment registry on boot
         database.ref('cart_metadata').on('value', (snapshot) => {
             globalCartMetadata = snapshot.val() || {};
             updateCartMetaLabel();
@@ -436,7 +434,13 @@
                     if (currentStatus === 'Overnight') statusColor = "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100";
                     if (currentStatus === 'Available') statusColor = "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100";
 
-                    slotElement.className = `flex flex-col items-center justify-between p-2 rounded-xl border transition-all cursor-pointer ${statusColor} min-h-[92px] text-center`;
+                    slotElement.className = `flex flex-col items-center justify-between p-2 rounded-xl border transition-all ${statusColor} min-h-[92px] text-center`;
+                    
+                    if (activeAsset === 'Unmapped') {
+                        slotElement.classList.add('cursor-pointer');
+                    } else {
+                        slotElement.classList.add('cursor-default');
+                    }
                     
                     let middleRow = currentUser 
                         ? `<span class="text-[9px] font-semibold truncate w-full block text-gray-700 bg-white/40 rounded px-0.5">${currentUser}</span>` 
@@ -458,11 +462,11 @@
                             if(confirm(`Remove loose asset tag #${activeAsset}?`)) {
                                 database.ref(`carts/Unassigned-Loose-Devices/${slotId}`).remove();
                             }
-                        } else {
-                            let userPrompt = prompt(`Configure Asset Tag for ${selectedCart.replace(/-/g, ' ')} Slot ${slotData.number}:\n\nEnter barcode text:`, activeAsset === 'Unmapped' ? '' : activeAsset);
-                            if (userPrompt !== null) {
+                        } else if (activeAsset === 'Unmapped') {
+                            let userPrompt = prompt(`Configure Asset Tag for ${selectedCart.replace(/-/g, ' ')} Slot ${slotData.number}:\n\nEnter barcode text:`, '');
+                            if (userPrompt !== null && userPrompt.trim() !== '') {
                                 database.ref(`carts/${selectedCart}/${slotId}`).update({
-                                    assetTag: userPrompt.trim() || 'Unmapped'
+                                    assetTag: userPrompt.trim()
                                 });
                             }
                         }
@@ -470,6 +474,16 @@
                     gridContainer.appendChild(slotElement);
                 });
             });
+        }
+
+        function adminEditAsset(cartId, slotId, currentAsset, slotNumber) {
+            let userPrompt = prompt(`Admin Editor — Update Asset Tag for ${cartId.replace(/-/g, ' ')} (Slot ${slotNumber}):\n\nEnter corrected barcode text:`, currentAsset === 'Unmapped' ? '' : currentAsset);
+            if (userPrompt !== null) {
+                let updatedValue = userPrompt.trim() || 'Unmapped';
+                database.ref(`carts/${cartId}/${slotId}`).update({
+                    assetTag: updatedValue
+                });
+            }
         }
 
         function buildAdminDashboard() {
@@ -512,16 +526,39 @@
                         }
 
                         let locationString = cartId === 'Unassigned-Loose-Devices' ? 'Loose Vault stock' : `${meta.teacherName} (${meta.roomNumber})`;
+                        let slotNumberDisplay = dev.number || '';
+
+                        const tdAction = document.createElement('td');
+                        tdAction.className = "p-4 text-center";
+                        
+                        if (cartId !== 'Unassigned-Loose-Devices') {
+                            const editBtn = document.createElement('button');
+                            editBtn.className = "text-xs font-bold bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 px-2.5 py-1 rounded-md transition-all cursor-pointer shadow-sm";
+                            editBtn.innerText = "✏️ Edit Tag";
+                            editBtn.onclick = () => adminEditAsset(cartId, slotId, displayAsset, slotNumberDisplay);
+                            tdAction.appendChild(editBtn);
+                        } else {
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.className = "text-xs font-bold bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 px-2.5 py-1 rounded-md transition-all cursor-pointer shadow-sm";
+                            deleteBtn.innerText = "❌ Remove";
+                            deleteBtn.onclick = () => {
+                                if(confirm(`Remove loose asset tag #${displayAsset}?`)) {
+                                    database.ref(`carts/Unassigned-Loose-Devices/${slotId}`).remove();
+                                }
+                            };
+                            tdAction.appendChild(deleteBtn);
+                        }
 
                         tr.innerHTML = `
                             <td class="p-4 font-mono font-bold text-gray-900">${displayAsset}</td>
-                            <td class="p-4 text-gray-500 font-medium">${displayCartName} (Slot ${dev.number || ''})</td>
+                            <td class="p-4 text-gray-500 font-medium">${displayCartName} (Slot ${slotNumberDisplay})</td>
                             <td class="p-4 text-gray-600 font-semibold">${locationString}</td>
                             <td class="p-4 text-gray-600 font-semibold">${dev.assignedTo || '—'}</td>
                             <td class="p-4 text-center">
                                 <span class="px-2.5 py-1 text-xs font-bold rounded-md border ${badgeStyle}">${status}</span>
                             </td>
                         `;
+                        tr.appendChild(tdAction);
                         tableBody.appendChild(tr);
                     });
                 });
