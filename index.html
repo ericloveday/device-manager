@@ -230,6 +230,7 @@
                 <div class="border-b border-gray-100 pb-3 mb-4">
                     <h2 class="text-lg font-bold text-gray-900">Bulk Import via CSV File</h2>
                     <p class="text-xs text-gray-500">Upload a spreadsheet dataset with header labels containing <strong>Student Name</strong>, <strong>Asset Tag</strong>, and <strong>Grade Level</strong> to perform rapid database imports.</p>
+                    <p class="text-xs text-orange-700 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2 mt-2 font-semibold">⚠️ Every row needs a Student Name — rows with a blank name are skipped automatically. If Grade Level is blank or not a number, that student will default to <strong>9th Grade</strong> instead of showing an error, so double-check grades after importing. Asset Tag can be left blank; it will just show as "Unmapped."</p>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-4 text-xs font-bold">
                     <div class="space-y-1 w-full sm:w-auto flex-1">
@@ -693,6 +694,9 @@
                 }
 
                 let importCount = 0;
+                let skippedNoName = 0;
+                let skippedShortRow = 0;
+                let defaultedGrade = [];
                 const updates = {};
 
                 for (let i = 1; i < lines.length; i++) {
@@ -700,18 +704,19 @@
                     
                     // Regex split handling string commas inside quotes safely
                     const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(r => r.trim().replace(/^["']|["']$/g, ''));
-                    if (row.length <= Math.max(nameIdx, gradeIdx)) continue;
+                    if (row.length <= Math.max(nameIdx, gradeIdx)) { skippedShortRow++; continue; }
 
                     const studentName = row[nameIdx];
-                    let gradeRaw = row[gradeIdx];
+                    let gradeRaw = row[gradeIdx] || '';
+
+                    if (!studentName) { skippedNoName++; continue; }
                     
                     // Extract numerical digits from data noise (e.g., matching "9th Grade" or "9" -> "9")
                     const digitMatch = gradeRaw.match(/\d+/);
-                    const grade = digitMatch ? digitMatch[0] : "9"; 
+                    const grade = digitMatch ? digitMatch[0] : "9";
+                    if (!digitMatch) defaultedGrade.push(studentName);
                     
                     const assetTag = (assetIdx !== -1 && row[assetIdx]) ? row[assetIdx] : 'Unmapped';
-
-                    if (!studentName) continue;
 
                     const newKeyId = database.ref('assigned_devices').push().key;
                     updates[newKeyId] = {
@@ -727,7 +732,25 @@
 
                 if (importCount > 0) {
                     database.ref('assigned_devices').update(updates).then(() => {
-                        alert(`Successfully imported ${importCount} students into the 1:1 registry!`);
+                        let summary = `Successfully imported ${importCount} students into the 1:1 registry!`;
+
+                        const issues = [];
+                        if (skippedNoName > 0) {
+                            issues.push(`⚠️ ${skippedNoName} row(s) skipped — no Student Name found.`);
+                        }
+                        if (skippedShortRow > 0) {
+                            issues.push(`⚠️ ${skippedShortRow} row(s) skipped — missing columns (row shorter than expected).`);
+                        }
+                        if (defaultedGrade.length > 0) {
+                            const list = defaultedGrade.slice(0, 10).join(', ') + (defaultedGrade.length > 10 ? `, +${defaultedGrade.length - 10} more` : '');
+                            issues.push(`⚠️ ${defaultedGrade.length} student(s) defaulted to Grade 9 (blank/unreadable Grade Level): ${list}`);
+                        }
+
+                        if (issues.length > 0) {
+                            summary += `\n\nPlease review:\n` + issues.join('\n');
+                        }
+
+                        alert(summary);
                         fileInput.value = '';
                     }).catch(err => {
                         alert("Firebase Database Error: " + err.message);
