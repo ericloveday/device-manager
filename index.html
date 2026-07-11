@@ -145,3 +145,772 @@
             </div>
         </section>
     </main>
+
+    <main id="view-rosters-container" class="max-w-7xl mx-auto p-4 md:p-6 space-y-6 hidden">
+        <div id="roster-panel-cart" class="space-y-6">
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="border-b border-gray-100 pb-3 mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">Cart & Teacher Assignments</h2>
+                    <p class="text-xs text-gray-500">Assign a classroom teacher name to manage each grade-level physical cart fleet.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="teacher-assignment-grid"></div>
+                <div class="mt-4 flex justify-end">
+                    <button onclick="saveTeacherAssignments()" class="text-white font-bold text-sm py-2 px-5 rounded-xl shadow bg-gray-800 hover:bg-gray-900 cursor-pointer">
+                        🔗 Update Teacher Assignments
+                    </button>
+                </div>
+            </section>
+
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="border-b border-gray-100 pb-3 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Permanent Student Roster Matrices</h2>
+                        <p class="text-xs text-gray-500">Map pre-assigned student seats permanently across all 4 instructional periods.</p>
+                    </div>
+                    <select id="roster-cart-selector" onchange="loadRosterEditor()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none"></select>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-gray-200 max-h-[500px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="sticky top-0 bg-gray-100 border-b border-gray-200 shadow-sm z-10">
+                            <tr class="text-gray-600 font-bold uppercase tracking-wider">
+                                <th class="p-3 w-16">Slot</th>
+                                <th class="p-3 w-40">Asset Barcode</th>
+                                <th class="p-3">Period 1 Student</th>
+                                <th class="p-3">Period 2 Student</th>
+                                <th class="p-3">Period 3 Student</th>
+                                <th class="p-3">Period 4 Student</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roster-matrix-body" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button onclick="saveAllRosters()" class="text-white font-bold text-sm py-2.5 px-6 rounded-xl shadow-md cursor-pointer" style="background-color: #c80206;">
+                        💾 Save Permanent Roster Changes
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <div id="roster-panel-oneone" class="space-y-6 hidden">
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="border-b border-gray-100 pb-3 mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">Add New Student Assignment (1:1 Registry)</h2>
+                    <p class="text-xs text-gray-500">Manually onboard an individual high-schooler profile to the digital tracking ledger.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs font-bold">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-500 uppercase">Student First/Last Name</label>
+                        <input type="text" id="new-stu-name" placeholder="John Doe" class="w-full p-2 bg-white border border-gray-200 rounded-lg focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-500 uppercase">Grade Level</label>
+                        <select id="new-stu-grade" class="w-full p-2 bg-white border border-gray-200 rounded-lg focus:outline-none">
+                            <option value="8">8th Grade</option>
+                            <option value="9">9th Grade</option>
+                            <option value="10">10th Grade</option>
+                            <option value="11">11th Grade</option>
+                            <option value="12">12th Grade</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-500 uppercase">Primary Chromebook Asset Barcode</label>
+                        <input type="text" id="new-stu-asset" placeholder="CB-XXXXX" class="w-full p-2 bg-white border border-gray-200 rounded-lg font-mono focus:outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="addOneOneStudent()" class="w-full text-white text-xs font-bold py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-900 shadow transition-all cursor-pointer">
+                            ➕ Add & Issue Asset
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <main id="view-audit-container" class="max-w-7xl mx-auto p-4 md:p-6 space-y-6 hidden">
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="sm:flex sm:items-center sm:justify-between border-b border-gray-100 pb-4 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">Global Operational Fleet Audit</h2>
+                    <p class="text-xs text-gray-500">Live operational status counts and active exceptions across the building.</p>
+                </div>
+                <input type="text" id="admin-search-input" onkeyup="filterAdminTable()" placeholder="Search active exceptions..." 
+                       class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#c80206] text-xs w-64">
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6 text-center text-xs">
+                <div class="p-3 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl font-bold">
+                    <span>IN SERVICE / READY</span><span id="metric-incart" class="block text-xl font-black mt-1">0</span>
+                </div>
+                <div class="p-3 bg-yellow-50 text-yellow-700 border border-yellow-100 rounded-xl font-bold">
+                    <span>TEMP LOANS / BORROWERS</span><span id="metric-out" class="block text-xl font-black mt-1">0</span>
+                </div>
+                <div class="p-3 bg-purple-50 text-purple-700 border border-purple-100 rounded-xl font-bold">
+                    <span>OVERNIGHT LOANS</span><span id="metric-overnight" class="block text-xl font-black mt-1">0</span>
+                </div>
+                <div class="p-3 bg-orange-50 text-orange-700 border border-orange-100 rounded-xl font-bold">
+                    <span>MISSING FLAGS</span><span id="metric-missing" class="block text-xl font-black mt-1">0</span>
+                </div>
+                <div class="p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-xl font-bold">
+                    <span>IN REPAIR SHOP</span><span id="metric-repair" class="block text-xl font-black mt-1">0</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-gray-100">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold uppercase tracking-wider">
+                            <th class="p-3">Asset Tag</th>
+                            <th class="p-3">System Scope Location / Context</th>
+                            <th class="p-3 text-center">Active Status</th>
+                            <th class="p-3">Assigned User / Custodian</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body" class="divide-y divide-gray-50"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <main id="view-history-container" class="max-w-7xl mx-auto p-4 md:p-6 space-y-6 hidden">
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="sm:flex sm:items-center sm:justify-between border-b border-gray-100 pb-4 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">📜 Permanent Device Transaction Timeline</h2>
+                    <p class="text-xs text-gray-500">Historical timeline log of classroom checkout exceptions, student changes, and returns.</p>
+                </div>
+                <input type="text" id="history-search-input" onkeyup="filterHistoryTable()" placeholder="Search asset, student, or status..." 
+                       class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#c80206] text-xs w-64">
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-gray-200 max-h-[600px] overflow-y-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="sticky top-0 bg-gray-50 border-b border-gray-100 shadow-sm z-10">
+                        <tr class="text-gray-500 font-bold uppercase tracking-wider">
+                            <th class="p-3">Timestamp</th>
+                            <th class="p-3">Asset Barcode</th>
+                            <th class="p-3">Source Framework Context</th>
+                            <th class="p-3 text-center">Action / Status Logged</th>
+                            <th class="p-3">Student Context</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body" class="divide-y divide-gray-50"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "PASTE_YOUR_API_KEY_HERE",
+            authDomain: "cca-device-manager.firebaseapp.com",
+            databaseURL: "https://cca-device-manager-default-rtdb.firebaseio.com/",
+            projectId: "cca-device-manager",
+            storageBucket: "cca-device-manager.appspot.com",
+            messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID_HERE",
+            appId: "PASTE_YOUR_APP_ID_HERE"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let globalSystemMode = 'cart'; // 'cart' or 'oneone'
+        let currentActiveTab = 'kiosk';
+        let globalCartMetadata = {}; 
+        let globalOneOneData = {};
+        let activeCartRef = null;
+
+        const cartKeysList = [
+            "7th-Grade-Cart-A", "7th-Grade-Cart-B", "7th-Grade-Cart-C", "7th-Grade-Cart-D",
+            "6th-Grade-Cart-A", "6th-Grade-Cart-B", "6th-Grade-Cart-C", "6th-Grade-Cart-D"
+        ];
+
+        // Core Realtime Sync Setup
+        database.ref('cart_metadata').on('value', (snapshot) => {
+            globalCartMetadata = snapshot.val() || {};
+            updateDropdownLabels();
+            updateCartMetaLabel();
+            renderTeacherInputs();
+            syncRosterSelectorOptions();
+        });
+
+        database.ref('assigned_devices').on('value', (snapshot) => {
+            globalOneOneData = snapshot.val() || {};
+            if (globalSystemMode === 'oneone' && currentActiveTab === 'kiosk') {
+                renderOneOneDirectory();
+            }
+        });
+
+        // Toggle Application Modes
+        function switchSystemMode(mode) {
+            globalSystemMode = mode;
+            const cartBtn = document.getElementById('mode-btn-cart');
+            const oneoneBtn = document.getElementById('mode-btn-oneone');
+            
+            const txtGrid = document.getElementById('nav-text-grid');
+            const txtRoster = document.getElementById('nav-text-roster');
+
+            if (mode === 'cart') {
+                cartBtn.className = "px-3 py-1.5 rounded-lg bg-white text-[#c80206] shadow transition-all cursor-pointer";
+                oneoneBtn.className = "px-3 py-1.5 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer";
+                txtGrid.innerText = "Classroom Grid";
+                txtRoster.innerText = "Roster Manager";
+            } else {
+                oneoneBtn.className = "px-3 py-1.5 rounded-lg bg-white text-[#c80206] shadow transition-all cursor-pointer";
+                cartBtn.className = "px-3 py-1.5 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer";
+                txtGrid.innerText = "1:1 Directory";
+                txtRoster.innerText = "Add 1:1 Students";
+            }
+
+            switchView(currentActiveTab);
+        }
+
+        function switchView(target) {
+            currentActiveTab = target;
+            const tabs = {
+                kiosk: document.getElementById('tab-kiosk'),
+                rosters: document.getElementById('tab-rosters'),
+                audit: document.getElementById('tab-audit'),
+                history: document.getElementById('tab-history')
+            };
+            const views = {
+                kiosk: document.getElementById('view-kiosk-container'),
+                rosters: document.getElementById('view-rosters-container'),
+                audit: document.getElementById('view-audit-container'),
+                history: document.getElementById('view-history-container')
+            };
+
+            Object.keys(views).forEach(key => {
+                if (key === target) {
+                    views[key].classList.remove('hidden');
+                    tabs[key].className = "px-3 py-2 rounded-lg bg-white text-[#c80206] shadow transition-all cursor-pointer";
+                } else {
+                    views[key].classList.add('hidden');
+                    tabs[key].className = "px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer";
+                }
+            });
+
+            // Context Routing based on UI Target Views
+            if (target === 'kiosk') {
+                if (globalSystemMode === 'cart') {
+                    document.getElementById('instructions-cart').classList.remove('hidden');
+                    document.getElementById('instructions-oneone').classList.add('hidden');
+                    document.getElementById('main-view-title').innerText = "Classroom Cart Visualizer";
+                    document.getElementById('controls-cart-group').classList.remove('hidden');
+                    document.getElementById('controls-oneone-group').classList.add('hidden');
+                    document.getElementById('cart-grid').classList.remove('hidden');
+                    document.getElementById('oneone-list-container').classList.add('hidden');
+                    loadCartData();
+                } else {
+                    document.getElementById('instructions-cart').classList.add('hidden');
+                    document.getElementById('instructions-oneone').classList.remove('hidden');
+                    document.getElementById('main-view-title').innerText = "1:1 Student Chromebook Registry";
+                    document.getElementById('controls-cart-group').classList.add('hidden');
+                    document.getElementById('controls-oneone-group').classList.remove('hidden');
+                    document.getElementById('cart-grid').classList.add('hidden');
+                    document.getElementById('oneone-list-container').classList.remove('hidden');
+                    updateCartMetaLabel();
+                    renderOneOneDirectory();
+                }
+            }
+
+            if (target === 'rosters') {
+                if (globalSystemMode === 'cart') {
+                    document.getElementById('roster-panel-cart').classList.remove('hidden');
+                    document.getElementById('roster-panel-oneone').classList.add('hidden');
+                    loadRosterEditor();
+                } else {
+                    document.getElementById('roster-panel-cart').classList.add('hidden');
+                    document.getElementById('roster-panel-oneone').classList.remove('hidden');
+                }
+            }
+
+            if (target === 'audit') buildAdminDashboard();
+            if (target === 'history') loadGlobalHistory();
+        }
+
+        // --- CART MODE CORE ROUTINES ---
+        function updateDropdownLabels() {
+            cartKeysList.forEach(key => {
+                const optionEl = document.getElementById(`opt-${key}`);
+                if (optionEl) {
+                    const teacher = globalCartMetadata[key]?.teacherName || "Unassigned";
+                    optionEl.innerText = `${key.replace(/-/g, ' ')} (${teacher})`;
+                }
+            });
+        }
+
+        function syncRosterSelectorOptions() {
+            const rSelector = document.getElementById('roster-cart-selector');
+            if (!rSelector) return;
+            const currentVal = rSelector.value;
+            rSelector.innerHTML = '';
+            cartKeysList.forEach(key => {
+                const teacher = globalCartMetadata[key]?.teacherName || "Unassigned";
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = `${key.replace(/-/g, ' ')} (${teacher})`;
+                rSelector.appendChild(opt);
+            });
+            if (currentVal && cartKeysList.includes(currentVal)) rSelector.value = currentVal;
+        }
+
+        function renderTeacherInputs() {
+            const grid = document.getElementById('teacher-assignment-grid');
+            if(!grid) return;
+            let html = '';
+            cartKeysList.forEach(key => {
+                const val = globalCartMetadata[key]?.teacherName || '';
+                html += `
+                    <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-1">
+                        <label class="text-[10px] uppercase font-black tracking-wider text-gray-500">${key.replace(/-/g, ' ')}</label>
+                        <input type="text" id="input-teacher-${key}" value="${val}" placeholder="Assign Teacher Name..." 
+                               class="w-full px-2.5 py-1.5 text-xs font-bold bg-white border border-gray-200 rounded-lg focus:outline-none">
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        function saveTeacherAssignments() {
+            let updates = {};
+            cartKeysList.forEach(key => {
+                const val = document.getElementById(`input-teacher-${key}`).value.trim();
+                updates[`${key}/teacherName`] = val;
+            });
+            database.ref('cart_metadata').update(updates).then(() => { alert("Teacher assignments saved!"); });
+        }
+
+        function updateCartMetaLabel() {
+            const metaDisplay = document.getElementById('cart-meta-display');
+            if(!metaDisplay) return;
+            if(globalSystemMode === 'cart') {
+                const currentCart = document.getElementById('cart-selector').value;
+                const activeTeacher = globalCartMetadata[currentCart]?.teacherName || "Unassigned";
+                metaDisplay.innerHTML = `📍 Focus: <strong class="text-gray-900">${currentCart.replace(/-/g, ' ')}</strong> &nbsp;|&nbsp; Teacher Assigned: <strong class="text-red-700">${activeTeacher}</strong>`;
+            } else {
+                const size = Object.keys(globalOneOneData).length;
+                metaDisplay.innerHTML = `🌍 System: <strong class="text-gray-900">1:1 Assigned Framework</strong> &nbsp;|&nbsp; Tracked Active Student Directory: <strong class="text-blue-700">${size} Students</strong>`;
+            }
+        }
+
+        function loadCartData() {
+            const selectedCart = document.getElementById('cart-selector').value;
+            const currentPeriod = document.getElementById('period-selector').value;
+            const gridContainer = document.getElementById('cart-grid');
+            updateCartMetaLabel();
+            
+            if (activeCartRef) activeCartRef.off();
+            activeCartRef = database.ref('carts/' + selectedCart);
+            activeCartRef.on('value', (snapshot) => {
+                gridContainer.innerHTML = ''; 
+                const data = snapshot.val();
+                if (!data) { initializeEmptyCart(selectedCart); return; }
+
+                Object.keys(data).sort((a, b) => (parseInt(a.replace('slot_', ''), 10) || 0) - (parseInt(b.replace('slot_', ''), 10) || 0)).forEach((slotId) => {
+                    const slotData = data[slotId];
+                    const slotElement = document.createElement('div');
+                    let currentStatus = slotData.status || 'In Cart';
+                    let tempBorrower = slotData.temporaryBorrower || '';
+                    let activeAsset = slotData.assetTag || 'Unmapped';
+                    let assignedStudent = slotData[currentPeriod] || '— Open Seat —';
+                    
+                    let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200"; 
+                    if (currentStatus === 'Temp Out') statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200";
+                    if (currentStatus === 'Overnight') statusColor = "bg-purple-50 text-purple-700 border-purple-200";
+                    if (currentStatus === 'Missing') statusColor = "bg-orange-50 text-orange-700 border-orange-200";
+                    if (currentStatus === 'Repair') statusColor = "bg-rose-50 text-rose-700 border-rose-200";
+
+                    slotElement.className = `flex flex-col items-center justify-between p-2.5 rounded-xl border transition-all ${statusColor} min-h-[135px] text-center shadow-xs`;
+                    let middleDisplay = currentStatus === 'In Cart' ? `<span class="text-[11px] font-black truncate w-full block text-emerald-950 bg-emerald-200/50 rounded py-1 px-1.5">${assignedStudent}</span>` 
+                                      : (currentStatus === 'Temp Out' ? `<span class="text-[9px] font-medium truncate w-full block text-yellow-900 bg-white/60 rounded py-1 px-1.5">Borrowed By:<br><strong class="font-bold text-[10px]">${tempBorrower}</strong></span>`
+                                      : (currentStatus === 'Overnight' ? `<span class="text-[9px] font-medium truncate w-full block text-purple-900 bg-white/60 rounded py-1 px-1.5">Home With:<br><strong class="font-bold text-[10px]">${tempBorrower || assignedStudent}</strong></span>`
+                                      : `<span class="text-[9px] font-bold tracking-wider opacity-60 uppercase bg-black/5 rounded py-1 px-1 w-full block">DEVICE REMOVED</span>`));
+
+                    slotElement.innerHTML = `
+                        <div class="w-full flex justify-between items-start cursor-pointer" onclick="handleCardClick('${selectedCart}', '${slotId}', '${activeAsset}', '${slotData.number}')">
+                            <div><span class="text-[8px] font-bold opacity-40 block text-left">Slot</span><span class="text-lg font-black leading-none">${slotData.number}</span></div>
+                            <span class="text-[8px] opacity-40 font-mono block truncate max-w-[65px]">#${activeAsset}</span>
+                        </div>
+                        <div class="w-full my-1.5">${middleDisplay}</div>
+                        <div class="w-full">
+                            <select onchange="handleDropdownStatusChange(this, '${selectedCart}', '${slotId}', '${tempBorrower}', '${assignedStudent}', '${activeAsset}', '${slotData.number}')" 
+                                    class="w-full text-[10px] font-black uppercase tracking-wide px-1 py-1 rounded bg-white text-center border border-gray-200 focus:outline-none cursor-pointer">
+                                <option value="In Cart" ${currentStatus === 'In Cart' ? 'selected' : ''}>✅ In Cart</option>
+                                <option value="Temp Out" ${currentStatus === 'Temp Out' ? 'selected' : ''}>🔄 Temp Out</option>
+                                <option value="Overnight" ${currentStatus === 'Overnight' ? 'selected' : ''}>🏠 Overnight</option>
+                                <option value="Missing" ${currentStatus === 'Missing' ? 'selected' : ''}>⚠️ Missing</option>
+                                <option value="Repair" ${currentStatus === 'Repair' ? 'selected' : ''}>🔧 Repair</option>
+                            </select>
+                        </div>
+                    `;
+                    gridContainer.appendChild(slotElement);
+                });
+            });
+        }
+
+        function handleDropdownStatusChange(selectEl, selectedCart, slotId, currentBorrower, assignedStudent, assetTag, slotNum) {
+            const nextStatus = selectEl.value;
+            let nextBorrower = '';
+
+            if (nextStatus === 'Temp Out' || nextStatus === 'Overnight') {
+                let p = prompt(`Enter student name for confirmation context:`, currentBorrower || assignedStudent || '');
+                if (p === null) { loadCartData(); return; }
+                nextBorrower = p.trim() || 'Temporary Student';
+            }
+
+            database.ref(`carts/${selectedCart}/${slotId}`).update({ status: nextStatus, temporaryBorrower: nextBorrower }).then(() => {
+                const logContextStudent = nextStatus === 'In Cart' ? (currentBorrower || assignedStudent) : nextBorrower;
+                const dateObj = new Date();
+                const timestampStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const loggedTeacher = globalCartMetadata[selectedCart]?.teacherName || "Unassigned";
+
+                database.ref('device_history').push({
+                    timestamp: timestampStr, assetTag: assetTag, cartName: selectedCart.replace(/-/g, ' '),
+                    slotNumber: slotNum, status: nextStatus, student: logContextStudent || '—', teacherName: loggedTeacher
+                });
+            });
+        }
+
+        function handleCardClick(selectedCart, slotId, activeAsset, slotNum) {
+            let userPrompt = prompt(`Configure Permanent Asset barcode text label for Slot ${slotNum}:`, activeAsset === 'Unmapped' ? '' : activeAsset);
+            if (userPrompt !== null && userPrompt.trim() !== '') {
+                database.ref(`carts/${selectedCart}/${slotId}`).update({ assetTag: userPrompt.trim() });
+            }
+        }
+
+        function loadRosterEditor() {
+            const targetCart = document.getElementById('roster-cart-selector').value;
+            const tableBody = document.getElementById('roster-matrix-body');
+            tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Loading roster grid matrix values...</td></tr>`;
+
+            database.ref('carts/' + targetCart).once('value', (snapshot) => {
+                tableBody.innerHTML = '';
+                const data = snapshot.val() || {};
+                Object.keys(data).sort((a, b) => (parseInt(a.replace('slot_', ''), 10) || 0) - (parseInt(b.replace('slot_', ''), 10) || 0)).forEach(slotId => {
+                    const s = data[slotId];
+                    const tr = document.createElement('tr');
+                    tr.dataset.slotId = slotId;
+                    tr.className = "hover:bg-gray-50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="p-2 font-bold text-gray-900 bg-gray-50 text-center border-r border-gray-100">${s.number}</td>
+                        <td class="p-1"><input type="text" value="${s.assetTag || 'Unmapped'}" class="asset-input w-full px-2 py-1 bg-white border border-gray-200 rounded font-mono font-bold text-gray-700 focus:outline-none"></td>
+                        <td class="p-1"><input type="text" value="${s.period_1 || ''}" placeholder="P1 Student..." class="p1-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
+                        <td class="p-1"><input type="text" value="${s.period_2 || ''}" placeholder="P2 Student..." class="p2-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
+                        <td class="p-1"><input type="text" value="${s.period_3 || ''}" placeholder="P3 Student..." class="p3-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
+                        <td class="p-1"><input type="text" value="${s.period_4 || ''}" placeholder="P4 Student..." class="p4-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            });
+        }
+
+        function saveAllRosters() {
+            const targetCart = document.getElementById('roster-cart-selector').value;
+            const rows = document.getElementById('roster-matrix-body').getElementsByTagName('tr');
+            let updates = {};
+            for(let row of rows) {
+                let slotId = row.dataset.slotId; if(!slotId) continue;
+                updates[`${slotId}/assetTag`] = row.querySelector('.asset-input').value.trim();
+                updates[`${slotId}/period_1`] = row.querySelector('.p1-input').value.trim();
+                updates[`${slotId}/period_2`] = row.querySelector('.p2-input').value.trim();
+                updates[`${slotId}/period_3`] = row.querySelector('.p3-input').value.trim();
+                updates[`${slotId}/period_4`] = row.querySelector('.p4-input').value.trim();
+            }
+            database.ref('carts/' + targetCart).update(updates).then(() => { alert("Rosters successfully saved!"); loadRosterEditor(); });
+        }
+
+
+        // --- 1:1 STRUCTURE CORE ROUTINES (NEW ADDITIONS) ---
+        function addOneOneStudent() {
+            const name = document.getElementById('new-stu-name').value.trim();
+            const grade = document.getElementById('new-stu-grade').value;
+            const asset = document.getElementById('new-stu-asset').value.trim() || 'Unmapped';
+            
+            if(!name) { alert("Please input a valid Student Name."); return; }
+
+            const newRef = database.ref('assigned_devices').push();
+            newRef.set({
+                studentName: name, grade: grade, currentAssetTag: asset, loanerAssetTag: '', status: 'Assigned', assetHistory: {}
+            }).then(() => {
+                alert(`Successfully registered ${name} inside the 1:1 ledger!`);
+                document.getElementById('new-stu-name').value = '';
+                document.getElementById('new-stu-asset').value = '';
+            });
+        }
+
+        function renderOneOneDirectory() {
+            const tbody = document.getElementById('oneone-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            const filterText = document.getElementById('oneone-search').value.toUpperCase();
+            const filterGrade = document.getElementById('oneone-grade-filter').value;
+
+            let keys = Object.keys(globalOneOneData);
+            if(keys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">No student device allocations provisioned. Use the Roster Manager tab to configure.</td></tr>`;
+                return;
+            }
+
+            keys.forEach(id => {
+                const stu = globalOneOneData[id];
+                const matchText = `${stu.studentName} ${stu.currentAssetTag} ${stu.loanerAssetTag}`.toUpperCase();
+                
+                if (filterGrade !== 'ALL' && stu.grade !== filterGrade) return;
+                if (filterText && matchText.indexOf(filterText) === -1) return;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/50 transition-colors";
+
+                let statusBadge = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                if(stu.status === 'Repair') statusBadge = "bg-rose-50 text-rose-700 border-rose-200";
+                if(stu.status === 'Replace') statusBadge = "bg-orange-50 text-orange-700 border-orange-200";
+                if(stu.status === 'Lost') statusBadge = "bg-gray-600 text-white border-gray-700";
+
+                // Map Out Asset History Display Strings
+                let historyHtml = '<span class="text-[10px] text-gray-400">None</span>';
+                if (stu.assetHistory) {
+                    historyHtml = Object.keys(stu.assetHistory).map(hid => {
+                        const h = stu.assetHistory[hid];
+                        return `<div class="text-[10px] text-gray-500 font-mono">🚫 #${h.oldAsset} (${h.reason} - ${h.date})</div>`;
+                    }).join('');
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-gray-900">${stu.studentName}</td>
+                    <td class="p-3 text-center text-gray-500 font-bold">${stu.grade}th</td>
+                    <td class="p-3">
+                        <button onclick="triggerAssetSwap('${id}', '${stu.currentAssetTag}', '${stu.studentName}')" 
+                                class="px-2 py-1 font-mono font-bold bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded cursor-pointer transition-all">
+                            #${stu.currentAssetTag} 🔄
+                        </button>
+                    </td>
+                    <td class="p-3">
+                        <input type="text" value="${stu.loanerAssetTag || ''}" placeholder="No Loaner Issued" 
+                               onchange="updateLoanerTag('${id}', this.value, '${stu.studentName}')"
+                               class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono w-32 focus:border-red-600 focus:outline-none">
+                    </td>
+                    <td class="p-3 text-center">
+                        <select onchange="update11Status('${id}', this.value, '${stu.studentName}', '${stu.currentAssetTag}')" 
+                                class="p-1 rounded font-bold uppercase tracking-wide text-[10px] bg-white border border-gray-200 cursor-pointer focus:outline-none">
+                            <option value="Assigned" ${stu.status === 'Assigned' ? 'selected' : ''}>✅ Assigned</option>
+                            <option value="Repair" ${stu.status === 'Repair' ? 'selected' : ''}>🔧 Repair Shop</option>
+                            <option value="Replace" ${stu.status === 'Replace' ? 'selected' : ''}>⚠️ Replace Flag</option>
+                            <option value="Lost" ${stu.status === 'Lost' ? 'selected' : ''}>❌ Lost / Missing</option>
+                        </select>
+                    </td>
+                    <td class="p-3 text-right space-y-1">${historyHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function triggerAssetSwap(studentId, oldAsset, studentName) {
+            let nextAsset = prompt(`Swap primary chromebook for ${studentName}.\nArchive current asset #${oldAsset} into lifecycle loop history.\nInput NEW Permanent Asset tag code:`);
+            if(nextAsset === null) return;
+            nextAsset = nextAsset.trim();
+            if(!nextAsset) return;
+
+            let reason = prompt("State reason for hardware change (e.g., Broken Screen, Key Upgrades, Device Replacement):", "Hardware Exchange");
+            if(reason === null) reason = "Exchanged";
+
+            const dateObj = new Date();
+            const dateStr = dateObj.toLocaleDateString();
+            const timestampStr = dateStr + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            // 1. Log to history list inside the specific student entity node 
+            database.ref(`assigned_devices/${studentId}/assetHistory`).push({
+                oldAsset: oldAsset, reason: reason, date: dateStr
+            });
+
+            // 2. Perform the permanent device upgrade switch
+            database.ref(`assigned_devices/${studentId}`).update({ currentAssetTag: nextAsset });
+
+            // 3. Document down stream logging record tracks
+            database.ref('device_history').push({
+                timestamp: timestampStr, assetTag: nextAsset, cartName: "1:1 FRAMEWORK (SWAP)",
+                slotNumber: `Exchanged #${oldAsset}`, status: "Asset Changeded", student: studentName, teacherName: reason
+            });
+        }
+
+        function updateLoanerTag(studentId, val, studentName) {
+            const cleanVal = val.trim();
+            database.ref(`assigned_devices/${studentId}`).update({ loanerAssetTag: cleanVal }).then(() => {
+                const dateObj = new Date();
+                const timestampStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                database.ref('device_history').push({
+                    timestamp: timestampStr, assetTag: cleanVal || 'None', cartName: "1:1 LOANER LOG",
+                    slotNumber: "Loaner field updated", status: "Loaner Event", student: studentName, teacherName: "Admin Action"
+                });
+            });
+        }
+
+        function update11Status(studentId, nextStatus, studentName, assetTag) {
+            database.ref(`assigned_devices/${studentId}`).update({ status: nextStatus }).then(() => {
+                const dateObj = new Date();
+                const timestampStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                database.ref('device_history').push({
+                    timestamp: timestampStr, assetTag: assetTag, cartName: "1:1 MATRIX STATUS",
+                    slotNumber: "Grade 8-12", status: nextStatus, student: studentName, teacherName: "Lifecycle Sync"
+                });
+            });
+        }
+
+        // --- DYNAMIC GLOBAL AGGREGATIONS ---
+        function buildAdminDashboard() {
+            const tableBody = document.getElementById('admin-table-body');
+            if(!tableBody) return;
+            tableBody.innerHTML = '';
+            
+            let countInCart = 0, countOut = 0, countOvernight = 0, countMissing = 0, countRepair = 0;
+
+            // 1. Process 6th-7th Cart Data
+            database.ref('carts').once('value', (cartSnap) => {
+                const allCarts = cartSnap.val() || {};
+                Object.keys(allCarts).forEach(cartId => {
+                    const devices = allCarts[cartId];
+                    const activeTeacher = globalCartMetadata[cartId]?.teacherName || "Unassigned";
+                    
+                    Object.keys(devices).forEach(slotId => {
+                        const dev = devices[slotId];
+                        let status = dev.status || 'In Cart';
+                        let displayAsset = dev.assetTag || 'Unmapped';
+
+                        if (status === 'In Cart') countInCart++;
+                        else if (status === 'Temp Out') countOut++;
+                        else if (status === 'Overnight') countOvernight++;
+                        else if (status === 'Missing') countMissing++;
+                        else if (status === 'Repair') countRepair++;
+
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-gray-50/80 transition-colors";
+                        let badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                        if (status === 'Temp Out') badgeStyle = "bg-yellow-50 text-yellow-700 border-yellow-100";
+                        if (status === 'Overnight') badgeStyle = "bg-purple-50 text-purple-700 border-purple-100";
+                        if (status === 'Missing') badgeStyle = "bg-orange-50 text-orange-700 border-orange-100";
+                        if (status === 'Repair') badgeStyle = "bg-rose-50 text-rose-700 border-rose-100";
+
+                        tr.innerHTML = `
+                            <td class="p-3 font-mono font-bold text-gray-900">${displayAsset}</td>
+                            <td class="p-3 text-gray-500 font-medium">${cartId.replace(/-/g, ' ')} (Slot ${dev.number}) - <strong>${activeTeacher}</strong></td>
+                            <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-md border font-bold ${badgeStyle}">${status}</span></td>
+                            <td class="p-3 text-gray-600 font-medium">${dev.temporaryBorrower || '—'}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                });
+
+                // 2. Blend High School 1:1 Records seamlessly to the operational display
+                Object.keys(globalOneOneData).forEach(id => {
+                    const stu = globalOneOneData[id];
+                    let currentStatus = stu.status || 'Assigned';
+                    
+                    let systemStatusText = "In Cart"; 
+                    if(currentStatus === 'Assigned') { countInCart++; systemStatusText = "In Service"; }
+                    if(currentStatus === 'Repair') { countRepair++; systemStatusText = "Repair Shop"; }
+                    if(currentStatus === 'Replace') { countMissing++; systemStatusText = "Replace Flag"; }
+                    if(currentStatus === 'Lost') { countMissing++; systemStatusText = "Lost"; }
+
+                    if(stu.loanerAssetTag) {
+                        countOut++; // Tracking temporary allocations actively
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-gray-50/80 bg-slate-50/40 transition-colors border-l-2 border-blue-500";
+                    let badgeStyle = currentStatus === 'Assigned' ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-rose-50 text-rose-700 border-rose-100";
+
+                    tr.innerHTML = `
+                        <td class="p-3 font-mono font-bold text-blue-900">#${stu.currentAssetTag} ${stu.loanerAssetTag ? `<span class="text-amber-600 text-[10px] block font-sans">[Loaner: #${stu.loanerAssetTag}]</span>` : ''}</td>
+                        <td class="p-3 text-gray-500 font-medium">Grade ${stu.grade} - 1:1 Distributed Device Platform</td>
+                        <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-md border font-bold ${badgeStyle}">${systemStatusText.toUpperCase()}</span></td>
+                        <td class="p-3 text-blue-950 font-bold">${stu.studentName}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+
+                document.getElementById('metric-incart').innerText = countInCart;
+                document.getElementById('metric-out').innerText = countOut;
+                document.getElementById('metric-overnight').innerText = countOvernight;
+                document.getElementById('metric-missing').innerText = countMissing;
+                document.getElementById('metric-repair').innerText = countRepair;
+            });
+        }
+
+        function loadGlobalHistory() {
+            const historyBody = document.getElementById('history-table-body');
+            if(!historyBody) return;
+
+            database.ref('device_history').limitToLast(150).on('value', (snapshot) => {
+                historyBody.innerHTML = '';
+                const historyData = snapshot.val();
+                if (!historyData) {
+                    historyBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No transactions recorded yet.</td></tr>`;
+                    return;
+                }
+
+                Object.keys(historyData).reverse().forEach(logId => {
+                    const log = historyData[logId];
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-gray-50 transition-colors";
+
+                    let statusBadge = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                    if (['Temp Out', 'Loaner Event'].includes(log.status)) statusBadge = "bg-yellow-50 text-yellow-700 border-yellow-100";
+                    if (log.status === 'Overnight') statusBadge = "bg-purple-50 text-purple-700 border-purple-100";
+                    if (['Missing', 'Replace Flag', 'Lost'].includes(log.status)) statusBadge = "bg-orange-50 text-orange-700 border-orange-100";
+                    if (log.status === 'Repair') statusBadge = "bg-rose-50 text-rose-700 border-rose-100";
+                    if (log.status === 'Asset Changeded') statusBadge = "bg-blue-600 text-white border-blue-700 shadow-2xs";
+
+                    const historyTeacher = log.teacherName ? ` - <strong>${log.teacherName}</strong>` : '';
+
+                    tr.innerHTML = `
+                        <td class="p-3 text-gray-400 font-medium whitespace-nowrap">${log.timestamp}</td>
+                        <td class="p-3 font-mono font-bold text-gray-900">${log.assetTag.startsWith('#') ? log.assetTag : '#'+log.assetTag}</td>
+                        <td class="p-3 text-gray-500 font-medium uppercase tracking-wide text-[10px]">${log.cartName} ${log.slotNumber ? `(${log.slotNumber})` : ''}${historyTeacher}</td>
+                        <td class="p-3 text-center">
+                            <span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase ${statusBadge}">${log.status === 'In Cart' ? '↩️ Returned' : log.status}</span>
+                        </td>
+                        <td class="p-3 text-gray-700 font-bold">${log.student}</td>
+                    `;
+                    historyBody.appendChild(tr);
+                });
+            });
+        }
+
+        function filterAdminTable() {
+            const input = document.getElementById('admin-search-input').value.toUpperCase();
+            const rows = document.getElementById('admin-table-body').getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                const text = rows[i].textContent || rows[i].innerText;
+                rows[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
+
+        function filterHistoryTable() {
+            const input = document.getElementById('history-search-input').value.toUpperCase();
+            const rows = document.getElementById('history-table-body').getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                const text = rows[i].textContent || rows[i].innerText;
+                rows[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
+
+        function initializeEmptyCart(cartId) {
+            const initialData = {};
+            for (let i = 1; i <= 30; i++) {
+                initialData[`slot_${i}`] = {
+                    number: i, status: 'In Cart', assetTag: 'Unmapped', temporaryBorrower: '',
+                    period_1: '', period_2: '', period_3: '', period_4: ''
+                };
+            }
+            database.ref('carts/' + cartId).set(initialData);
+        }
+
+        window.onload = () => { loadCartData(); };
+    </script>
+</body>
+</html>
