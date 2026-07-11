@@ -96,7 +96,7 @@
                                 <option value="period_4">Period 4 Roster</option>
                             </select>
                         </div>
-                        <select id="cart-selector" onchange="loadCartData()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none">
+                        <select id="cart-selector" onchange="handleCartSelectorChange()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none">
                             <optgroup label="6th Grade Classroom Carts">
                                 <option id="opt-6th-Grade-Cart-A" value="6th-Grade-Cart-A">6th Grade - Cart A</option>
                                 <option id="opt-6th-Grade-Cart-B" value="6th-Grade-Cart-B">6th Grade - Cart B</option>
@@ -167,7 +167,7 @@
                         <h2 class="text-lg font-bold text-gray-900">Permanent Student Roster Matrices</h2>
                         <p class="text-xs text-gray-500">Map pre-assigned student seats permanently across all 4 instructional periods.</p>
                     </div>
-                    <select id="roster-cart-selector" onchange="loadRosterEditor()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none"></select>
+                    <select id="roster-cart-selector" onchange="handleRosterSelectorChange()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none"></select>
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-gray-200 max-h-[500px] overflow-y-auto">
@@ -385,6 +385,23 @@
             return (t && t.trim() !== '') ? t : 'Unassigned';
         }
 
+        // --- Remember last-selected cart on this device (localStorage) ---
+        const LAST_CART_STORAGE_KEY = 'ccm_lastSelectedCart';
+        function saveLastSelectedCart(key) {
+            try { localStorage.setItem(LAST_CART_STORAGE_KEY, key); } catch (e) { /* storage unavailable - fail silently */ }
+        }
+        function getLastSelectedCart() {
+            try { return localStorage.getItem(LAST_CART_STORAGE_KEY); } catch (e) { return null; }
+        }
+        function handleCartSelectorChange() {
+            saveLastSelectedCart(document.getElementById('cart-selector').value);
+            loadCartData();
+        }
+        function handleRosterSelectorChange() {
+            saveLastSelectedCart(document.getElementById('roster-cart-selector').value);
+            loadRosterEditor();
+        }
+
         // Core Realtime Sync Setup
         database.ref('cart_metadata').on('value', (snapshot) => {
             globalCartMetadata = snapshot.val() || {};
@@ -514,7 +531,12 @@
                 opt.innerText = `${grade} - ${teacher}`;
                 rSelector.appendChild(opt);
             });
-            if (currentVal && cartKeysList.includes(currentVal)) rSelector.value = currentVal;
+            if (currentVal && cartKeysList.includes(currentVal)) {
+                rSelector.value = currentVal;
+            } else {
+                const savedCart = getLastSelectedCart();
+                if (savedCart && cartKeysList.includes(savedCart)) rSelector.value = savedCart;
+            }
         }
 
         function renderTeacherInputs() {
@@ -1155,7 +1177,14 @@
             database.ref('carts/' + cartId).set(initialData);
         }
 
-        window.onload = () => { loadCartData(); };
+        window.onload = () => {
+            const savedCart = getLastSelectedCart();
+            if (savedCart && cartKeysList.includes(savedCart)) {
+                const cartSelectorEl = document.getElementById('cart-selector');
+                if (cartSelectorEl) cartSelectorEl.value = savedCart;
+            }
+            loadCartData();
+        };
     </script>
 </body>
 </html>
