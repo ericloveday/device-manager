@@ -222,6 +222,7 @@
         </section>
     </main>
 
+  <script src="https://cdn.firebase.com/js/client/2.4.2/firebase.js"></script> <!-- Keep your existing Firebase script tags here -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
@@ -322,7 +323,6 @@
             metaDisplay.innerHTML = `📍 Focus: <strong class="text-gray-900">${currentCart.replace(/-/g, ' ')}</strong> &nbsp;|&nbsp; Teacher Assigned: <strong class="text-red-700">${activeTeacher}</strong>`;
         }
 
-        // UPDATED 4-WAY SEPARATE VIEW ROUTER SWITCH
         function switchView(target) {
             const tabs = {
                 kiosk: document.getElementById('tab-kiosk'),
@@ -458,6 +458,9 @@
                 const logContextStudent = nextStatus === 'In Cart' ? (currentBorrower || assignedStudent) : nextBorrower;
                 const dateObj = new Date();
                 const timestampStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                // Capture the teacher assigned to the cart at this dynamic moment
+                const loggedTeacher = globalCartMetadata[selectedCart]?.teacherName || "Unassigned";
 
                 database.ref('device_history').push({
                     timestamp: timestampStr,
@@ -465,7 +468,8 @@
                     cartName: selectedCart.replace(/-/g, ' '),
                     slotNumber: slotNum,
                     status: nextStatus,
-                    student: logContextStudent || '—'
+                    student: logContextStudent || '—',
+                    teacherName: loggedTeacher // Pushed to the history schema
                 });
             });
         }
@@ -611,10 +615,13 @@
                     if (log.status === 'Missing') statusBadge = "bg-orange-50 text-orange-700 border-orange-100";
                     if (log.status === 'Repair') statusBadge = "bg-rose-50 text-rose-700 border-rose-100";
 
+                    // Formatted display showing the saved historical teacher explicitly
+                    const historyTeacher = log.teacherName ? ` - <strong>${log.teacherName}</strong>` : '';
+
                     tr.innerHTML = `
                         <td class="p-3 text-gray-400 font-medium whitespace-nowrap">${log.timestamp}</td>
                         <td class="p-3 font-mono font-bold text-gray-900">#${log.assetTag}</td>
-                        <td class="p-3 text-gray-500 font-medium uppercase tracking-wide text-[10px]">${log.cartName} (Slot ${log.slotNumber})</td>
+                        <td class="p-3 text-gray-500 font-medium uppercase tracking-wide text-[10px]">${log.cartName} (Slot ${log.slotNumber})${historyTeacher}</td>
                         <td class="p-3 text-center">
                             <span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase ${statusBadge}">${log.status === 'In Cart' ? '↩️ Returned' : log.status}</span>
                         </td>
