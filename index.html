@@ -185,7 +185,10 @@
                         <tbody id="roster-matrix-body" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
-                <div class="mt-4 flex justify-end">
+                <div class="mt-4 flex justify-end gap-3">
+                    <button onclick="repairCartSlots()" class="text-gray-700 font-bold text-sm py-2.5 px-6 rounded-xl shadow-md cursor-pointer bg-gray-100 border border-gray-300 hover:bg-gray-200">
+                        🔧 Repair / Rebuild Missing Chromebook Slots
+                    </button>
                     <button onclick="saveAllRosters()" class="text-white font-bold text-sm py-2.5 px-6 rounded-xl shadow-md cursor-pointer" style="background-color: #c80206;">
                         💾 Save Permanent Roster Changes
                     </button>
@@ -650,6 +653,39 @@
             if (userPrompt !== null && userPrompt.trim() !== '') {
                 database.ref(`carts/${selectedCart}/${slotId}`).update({ assetTag: userPrompt.trim() });
             }
+        }
+
+        function repairCartSlots() {
+            const targetCart = document.getElementById('roster-cart-selector').value;
+            if (!targetCart) return;
+
+            database.ref('carts/' + targetCart).once('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                let updates = {};
+                let missingCount = 0;
+                for (let i = 1; i <= 30; i++) {
+                    const slotKey = `slot_${i}`;
+                    if (!data[slotKey]) {
+                        missingCount++;
+                        updates[`${slotKey}/number`] = i;
+                        updates[`${slotKey}/status`] = 'In Cart';
+                        updates[`${slotKey}/assetTag`] = 'Unmapped';
+                        updates[`${slotKey}/temporaryBorrower`] = '';
+                        updates[`${slotKey}/period_1`] = '';
+                        updates[`${slotKey}/period_2`] = '';
+                        updates[`${slotKey}/period_3`] = '';
+                        updates[`${slotKey}/period_4`] = '';
+                    }
+                }
+                if (missingCount === 0) {
+                    alert("This cart already has all 30 slots. Nothing to repair.");
+                    return;
+                }
+                database.ref('carts/' + targetCart).update(updates).then(() => {
+                    alert(`Repaired ${missingCount} missing slot(s). Existing data was left untouched.`);
+                    loadRosterEditor();
+                });
+            });
         }
 
         function loadRosterEditor() {
