@@ -252,7 +252,7 @@
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="sm:flex sm:items-center sm:justify-between border-b border-gray-100 pb-4 mb-4">
                 <div>
-                    <h2 class="text-lg font-bold text-gray-900">Global Operational Fleet Audit</h2>
+                    <h2 class="text-lg font-bold text-gray-900">Fleet Audit</h2>
                     <p class="text-xs text-gray-500">Live operational status counts and active exceptions across the building.</p>
                 </div>
                 <input type="text" id="admin-search-input" onkeyup="filterAdminTable()" placeholder="Search active exceptions..." 
@@ -537,7 +537,7 @@
                     let currentStatus = slotData.status || 'In Cart';
                     let tempBorrower = slotData.temporaryBorrower || '';
                     let activeAsset = slotData.assetTag || 'Unmapped';
-                    let assignedStudent = slotData[currentPeriod] || '— Open Seat —';
+                    let assignedStudent = slotData[currentPeriod] || '— Unassigned —';
                     
                     let statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200"; 
                     if (currentStatus === 'Temp Out') statusColor = "bg-yellow-50 text-yellow-700 border-yellow-200";
