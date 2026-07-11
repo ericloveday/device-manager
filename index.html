@@ -277,6 +277,23 @@
                 </div>
             </div>
 
+            <div class="mb-6">
+                <h3 class="text-xs font-black uppercase tracking-wider text-gray-500 mb-2">🛒 Cart Fleet Roster</h3>
+                <div class="overflow-x-auto rounded-xl border border-gray-100">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold uppercase tracking-wider">
+                                <th class="p-3">Grade Level</th>
+                                <th class="p-3">Cart ID / Number</th>
+                                <th class="p-3">Assigned Teacher</th>
+                                <th class="p-3 text-center">Devices in Cart</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fleet-cart-overview-body" class="divide-y divide-gray-50"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="overflow-x-auto rounded-xl border border-gray-100">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
@@ -348,6 +365,22 @@
             "7th-Grade-Cart-A", "7th-Grade-Cart-B", "7th-Grade-Cart-C", "7th-Grade-Cart-D",
             "6th-Grade-Cart-A", "6th-Grade-Cart-B", "6th-Grade-Cart-C", "6th-Grade-Cart-D"
         ];
+
+        // --- Helper lookups (grade / cart number / teacher) ---
+        function getCartGradeLabel(key) {
+            return key.startsWith('7th') ? '7th Grade' : '6th Grade';
+        }
+        function getDefaultCartNumber(key) {
+            return key.split('-').pop(); // fallback: A, B, C, D
+        }
+        function getCartNumber(key) {
+            const stored = globalCartMetadata[key]?.cartNumber;
+            return (stored && stored.trim() !== '') ? stored : getDefaultCartNumber(key);
+        }
+        function getCartTeacher(key) {
+            const t = globalCartMetadata[key]?.teacherName;
+            return (t && t.trim() !== '') ? t : 'Unassigned';
+        }
 
         // Core Realtime Sync Setup
         database.ref('cart_metadata').on('value', (snapshot) => {
@@ -458,8 +491,9 @@
             cartKeysList.forEach(key => {
                 const optionEl = document.getElementById(`opt-${key}`);
                 if (optionEl) {
-                    const teacher = globalCartMetadata[key]?.teacherName || "Unassigned";
-                    optionEl.innerText = `${key.replace(/-/g, ' ')} (${teacher})`;
+                    const grade = getCartGradeLabel(key);
+                    const teacher = getCartTeacher(key);
+                    optionEl.innerText = `${grade} - ${teacher}`;
                 }
             });
         }
@@ -470,10 +504,11 @@
             const currentVal = rSelector.value;
             rSelector.innerHTML = '';
             cartKeysList.forEach(key => {
-                const teacher = globalCartMetadata[key]?.teacherName || "Unassigned";
+                const grade = getCartGradeLabel(key);
+                const teacher = getCartTeacher(key);
                 const opt = document.createElement('option');
                 opt.value = key;
-                opt.innerText = `${key.replace(/-/g, ' ')} (${teacher})`;
+                opt.innerText = `${grade} - ${teacher}`;
                 rSelector.appendChild(opt);
             });
             if (currentVal && cartKeysList.includes(currentVal)) rSelector.value = currentVal;
@@ -484,12 +519,22 @@
             if(!grid) return;
             let html = '';
             cartKeysList.forEach(key => {
-                const val = globalCartMetadata[key]?.teacherName || '';
+                const teacherVal = globalCartMetadata[key]?.teacherName || '';
+                const numberVal = globalCartMetadata[key]?.cartNumber || getDefaultCartNumber(key);
+                const gradeLabel = getCartGradeLabel(key);
                 html += `
-                    <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-1">
-                        <label class="text-[10px] uppercase font-black tracking-wider text-gray-500">${key.replace(/-/g, ' ')}</label>
-                        <input type="text" id="input-teacher-${key}" value="${val}" placeholder="Assign Teacher Name..." 
-                               class="w-full px-2.5 py-1.5 text-xs font-bold bg-white border border-gray-200 rounded-lg focus:outline-none">
+                    <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+                        <label class="text-[10px] uppercase font-black tracking-wider text-gray-500">${gradeLabel}</label>
+                        <div class="space-y-1">
+                            <label class="text-[9px] uppercase font-bold text-gray-400">Cart ID / Number</label>
+                            <input type="text" id="input-cartnum-${key}" value="${numberVal}" placeholder="e.g. A, 3, 12..." 
+                                   class="w-full px-2.5 py-1.5 text-xs font-bold bg-white border border-gray-200 rounded-lg focus:outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] uppercase font-bold text-gray-400">Assigned Teacher</label>
+                            <input type="text" id="input-teacher-${key}" value="${teacherVal}" placeholder="Assign Teacher Name..." 
+                                   class="w-full px-2.5 py-1.5 text-xs font-bold bg-white border border-gray-200 rounded-lg focus:outline-none">
+                        </div>
                     </div>
                 `;
             });
@@ -499,10 +544,12 @@
         function saveTeacherAssignments() {
             let updates = {};
             cartKeysList.forEach(key => {
-                const val = document.getElementById(`input-teacher-${key}`).value.trim();
-                updates[`${key}/teacherName`] = val;
+                const teacherVal = document.getElementById(`input-teacher-${key}`).value.trim();
+                const numberVal = document.getElementById(`input-cartnum-${key}`).value.trim() || getDefaultCartNumber(key);
+                updates[`${key}/teacherName`] = teacherVal;
+                updates[`${key}/cartNumber`] = numberVal;
             });
-            database.ref('cart_metadata').update(updates).then(() => { alert("Teacher assignments saved!"); });
+            database.ref('cart_metadata').update(updates).then(() => { alert("Cart & teacher assignments saved!"); });
         }
 
         function updateCartMetaLabel() {
@@ -510,8 +557,10 @@
             if(!metaDisplay) return;
             if(globalSystemMode === 'cart') {
                 const currentCart = document.getElementById('cart-selector').value;
-                const activeTeacher = globalCartMetadata[currentCart]?.teacherName || "Unassigned";
-                metaDisplay.innerHTML = `📍 Focus: <strong class="text-gray-900">${currentCart.replace(/-/g, ' ')}</strong> &nbsp;|&nbsp; Teacher Assigned: <strong class="text-red-700">${activeTeacher}</strong>`;
+                const grade = getCartGradeLabel(currentCart);
+                const cartNum = getCartNumber(currentCart);
+                const activeTeacher = getCartTeacher(currentCart);
+                metaDisplay.innerHTML = `📍 Focus: <strong class="text-gray-900">${grade} - Cart ${cartNum}</strong> &nbsp;|&nbsp; Teacher Assigned: <strong class="text-red-700">${activeTeacher}</strong>`;
             } else {
                 const size = Object.keys(globalOneOneData).length;
                 metaDisplay.innerHTML = `🌍 System: <strong class="text-gray-900">1:1 Assigned Framework</strong> &nbsp;|&nbsp; Tracked Active Student Directory: <strong class="text-blue-700">${size} Students</strong>`;
@@ -587,7 +636,7 @@
                 const logContextStudent = nextStatus === 'In Cart' ? (currentBorrower || assignedStudent) : nextBorrower;
                 const dateObj = new Date();
                 const timestampStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const loggedTeacher = globalCartMetadata[selectedCart]?.teacherName || "Unassigned";
+                const loggedTeacher = getCartTeacher(selectedCart);
 
                 database.ref('device_history').push({
                     timestamp: timestampStr, assetTag: assetTag, cartName: selectedCart.replace(/-/g, ' '),
@@ -882,10 +931,35 @@
         }
 
         // --- DYNAMIC GLOBAL AGGREGATIONS ---
+        function renderCartFleetOverview() {
+            const body = document.getElementById('fleet-cart-overview-body');
+            if(!body) return;
+            database.ref('carts').once('value', (cartSnap) => {
+                const allCarts = cartSnap.val() || {};
+                let html = '';
+                cartKeysList.forEach(key => {
+                    const gradeLabel = getCartGradeLabel(key);
+                    const cartNum = getCartNumber(key);
+                    const teacher = getCartTeacher(key);
+                    const deviceCount = allCarts[key] ? Object.keys(allCarts[key]).length : 0;
+                    html += `
+                        <tr class="hover:bg-gray-50/80 transition-colors">
+                            <td class="p-3 font-bold text-gray-900">${gradeLabel}</td>
+                            <td class="p-3 font-mono font-bold text-gray-700">${cartNum}</td>
+                            <td class="p-3 font-bold ${teacher === 'Unassigned' ? 'text-gray-400 italic font-medium' : 'text-red-700'}">${teacher}</td>
+                            <td class="p-3 text-center font-bold text-gray-600">${deviceCount}</td>
+                        </tr>
+                    `;
+                });
+                body.innerHTML = html;
+            });
+        }
+
         function buildAdminDashboard() {
             const tableBody = document.getElementById('admin-table-body');
             if(!tableBody) return;
             tableBody.innerHTML = '';
+            renderCartFleetOverview();
             
             let countInCart = 0, countOut = 0, countOvernight = 0, countMissing = 0, countRepair = 0;
 
@@ -894,7 +968,9 @@
                 const allCarts = cartSnap.val() || {};
                 Object.keys(allCarts).forEach(cartId => {
                     const devices = allCarts[cartId];
-                    const activeTeacher = globalCartMetadata[cartId]?.teacherName || "Unassigned";
+                    const activeTeacher = getCartTeacher(cartId);
+                    const gradeLabel = getCartGradeLabel(cartId);
+                    const cartNum = getCartNumber(cartId);
                     
                     Object.keys(devices).forEach(slotId => {
                         const dev = devices[slotId];
@@ -917,7 +993,7 @@
 
                         tr.innerHTML = `
                             <td class="p-3 font-mono font-bold text-gray-900">${displayAsset}</td>
-                            <td class="p-3 text-gray-500 font-medium">${cartId.replace(/-/g, ' ')} (Slot ${dev.number}) - <strong>${activeTeacher}</strong></td>
+                            <td class="p-3 text-gray-500 font-medium">${gradeLabel} - Cart ${cartNum} (Slot ${dev.number}) - <strong>${activeTeacher}</strong></td>
                             <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-md border font-bold ${badgeStyle}">${status}</span></td>
                             <td class="p-3 text-gray-600 font-medium">${dev.temporaryBorrower || '—'}</td>
                         `;
