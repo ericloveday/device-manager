@@ -225,6 +225,25 @@
                     </div>
                 </div>
             </section>
+
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="border-b border-gray-100 pb-3 mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">Bulk Import via CSV File</h2>
+                    <p class="text-xs text-gray-500">Upload a spreadsheet dataset with header labels containing <strong>Student Name</strong>, <strong>Asset Tag</strong>, and <strong>Grade Level</strong> to perform rapid database imports.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-4 text-xs font-bold">
+                    <div class="space-y-1 w-full sm:w-auto flex-1">
+                        <label class="text-[10px] text-gray-500 uppercase">Choose CSV File</label>
+                        <input type="file" id="csv-file-input" accept=".csv" 
+                               class="w-full p-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-gray-800 file:text-white hover:file:bg-gray-900 cursor-pointer">
+                    </div>
+                    <div class="flex items-end w-full sm:w-auto pt-2 sm:pt-4">
+                        <button onclick="uploadCSV11()" class="w-full sm:w-auto text-white text-xs font-bold py-2.5 px-5 rounded-lg shadow-md transition-all cursor-pointer" style="background-color: #c80206;">
+                            📥 Process & Bulk Import Assets
+                        </button>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -625,7 +644,7 @@
         }
 
 
-        // --- 1:1 STRUCTURE CORE ROUTINES (NEW ADDITIONS) ---
+        // --- 1:1 STRUCTURE CORE ROUTINES ---
         function addOneOneStudent() {
             const name = document.getElementById('new-stu-name').value.trim();
             const grade = document.getElementById('new-stu-grade').value;
@@ -641,6 +660,84 @@
                 document.getElementById('new-stu-name').value = '';
                 document.getElementById('new-stu-asset').value = '';
             });
+        }
+
+        // CSV Parser Routine
+        function uploadCSV11() {
+            const fileInput = document.getElementById('csv-file-input');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please pick a CSV file first.");
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split(/\r?\n/);
+                if (lines.length <= 1) {
+                    alert("The selected file is empty or missing content.");
+                    return;
+                }
+
+                // Header mapping algorithm
+                const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+                const nameIdx = headers.findIndex(h => h.includes('name'));
+                const assetIdx = headers.findIndex(h => h.includes('asset') || h.includes('tag'));
+                const gradeIdx = headers.findIndex(h => h.includes('grade') || h.includes('level'));
+
+                if (nameIdx === -1 || gradeIdx === -1) {
+                    alert("Unable to map headers dynamically. Ensure your file has explicit text columns containing 'Name' and 'Grade' (e.g. 'Student Name', 'Grade Level', 'Asset Tag').");
+                    return;
+                }
+
+                let importCount = 0;
+                const updates = {};
+
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    
+                    // Regex split handling string commas inside quotes safely
+                    const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(r => r.trim().replace(/^["']|["']$/g, ''));
+                    if (row.length <= Math.max(nameIdx, gradeIdx)) continue;
+
+                    const studentName = row[nameIdx];
+                    let gradeRaw = row[gradeIdx];
+                    
+                    // Extract numerical digits from data noise (e.g., matching "9th Grade" or "9" -> "9")
+                    const digitMatch = gradeRaw.match(/\d+/);
+                    const grade = digitMatch ? digitMatch[0] : "9"; 
+                    
+                    const assetTag = (assetIdx !== -1 && row[assetIdx]) ? row[assetIdx] : 'Unmapped';
+
+                    if (!studentName) continue;
+
+                    const newKeyId = database.ref('assigned_devices').push().key;
+                    updates[newKeyId] = {
+                        studentName: studentName,
+                        grade: grade,
+                        currentAssetTag: assetTag,
+                        loanerAssetTag: '',
+                        status: 'Assigned',
+                        assetHistory: {}
+                    };
+                    importCount++;
+                }
+
+                if (importCount > 0) {
+                    database.ref('assigned_devices').update(updates).then(() => {
+                        alert(`Successfully imported ${importCount} students into the 1:1 registry!`);
+                        fileInput.value = '';
+                    }).catch(err => {
+                        alert("Firebase Database Error: " + err.message);
+                    });
+                } else {
+                    alert("No readable student data rows were found.");
+                }
+            };
+            
+            reader.readAsText(file);
         }
 
         function renderOneOneDirectory() {
