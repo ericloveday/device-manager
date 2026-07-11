@@ -97,17 +97,17 @@
                             </select>
                         </div>
                         <select id="cart-selector" onchange="loadCartData()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none">
-                            <optgroup label="7th Grade Classroom Carts">
-                                <option id="opt-7th-Grade-Cart-A" value="7th-Grade-Cart-A">7th Grade - Cart A</option>
-                                <option id="opt-7th-Grade-Cart-B" value="7th-Grade-Cart-B">7th Grade - Cart B</option>
-                                <option id="opt-7th-Grade-Cart-C" value="7th-Grade-Cart-C">7th Grade - Cart C</option>
-                                <option id="opt-7th-Grade-Cart-D" value="7th-Grade-Cart-D">7th Grade - Cart D</option>
-                            </optgroup>
                             <optgroup label="6th Grade Classroom Carts">
                                 <option id="opt-6th-Grade-Cart-A" value="6th-Grade-Cart-A">6th Grade - Cart A</option>
                                 <option id="opt-6th-Grade-Cart-B" value="6th-Grade-Cart-B">6th Grade - Cart B</option>
                                 <option id="opt-6th-Grade-Cart-C" value="6th-Grade-Cart-C">6th Grade - Cart C</option>
                                 <option id="opt-6th-Grade-Cart-D" value="6th-Grade-Cart-D">6th Grade - Cart D</option>
+                            </optgroup>
+                            <optgroup label="7th Grade Classroom Carts">
+                                <option id="opt-7th-Grade-Cart-A" value="7th-Grade-Cart-A">7th Grade - Cart A</option>
+                                <option id="opt-7th-Grade-Cart-B" value="7th-Grade-Cart-B">7th Grade - Cart B</option>
+                                <option id="opt-7th-Grade-Cart-C" value="7th-Grade-Cart-C">7th Grade - Cart C</option>
+                                <option id="opt-7th-Grade-Cart-D" value="7th-Grade-Cart-D">7th Grade - Cart D</option>
                             </optgroup>
                         </select>
                     </div>
@@ -365,8 +365,8 @@
         let activeCartRef = null;
 
         const cartKeysList = [
-            "7th-Grade-Cart-A", "7th-Grade-Cart-B", "7th-Grade-Cart-C", "7th-Grade-Cart-D",
-            "6th-Grade-Cart-A", "6th-Grade-Cart-B", "6th-Grade-Cart-C", "6th-Grade-Cart-D"
+            "6th-Grade-Cart-A", "6th-Grade-Cart-B", "6th-Grade-Cart-C", "6th-Grade-Cart-D",
+            "7th-Grade-Cart-A", "7th-Grade-Cart-B", "7th-Grade-Cart-C", "7th-Grade-Cart-D"
         ];
 
         // --- Helper lookups (grade / cart number / teacher) ---
