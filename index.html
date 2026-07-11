@@ -78,6 +78,9 @@
             </ul>
         </section>
 
+        <div id="cart-viewing-banner" class="mb-4 p-3 rounded-xl border-2 font-black text-sm text-center" style="background-color: #fef2f2; border-color: #ce1f07; color: #ce1f07;">
+            Loading cart...
+        </div>
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 border-b border-gray-100 pb-4">
                 <div class="space-y-1">
@@ -162,6 +165,9 @@
             </section>
 
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div id="roster-viewing-banner" class="mb-4 p-3 rounded-xl border-2 font-black text-sm text-center" style="background-color: #fef2f2; border-color: #ce1f07; color: #ce1f07;">
+                    Loading cart...
+                </div>
                 <div class="border-b border-gray-100 pb-3 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                         <h2 class="text-lg font-bold text-gray-900">Permanent Student Roster Matrices</h2>
@@ -402,6 +408,19 @@
             loadRosterEditor();
         }
 
+        function updateViewingBanner(bannerId, cartKey) {
+            const banner = document.getElementById(bannerId);
+            if (!banner || !cartKey) return;
+            const grade = getCartGradeLabel(cartKey);
+            const cartNum = getCartNumber(cartKey);
+            const teacher = getCartTeacher(cartKey);
+            if (teacher === 'Unassigned') {
+                banner.innerHTML = `📍 Currently Viewing: UNASSIGNED CART — ${grade}, Cart ${cartNum}`;
+            } else {
+                banner.innerHTML = `📍 Currently Viewing: ${teacher.toUpperCase()}'S CART — ${grade}, Cart ${cartNum}`;
+            }
+        }
+
         // Core Realtime Sync Setup
         database.ref('cart_metadata').on('value', (snapshot) => {
             globalCartMetadata = snapshot.val() || {};
@@ -477,6 +496,7 @@
                     document.getElementById('controls-oneone-group').classList.add('hidden');
                     document.getElementById('cart-grid').classList.remove('hidden');
                     document.getElementById('oneone-list-container').classList.add('hidden');
+                    document.getElementById('cart-viewing-banner').classList.remove('hidden');
                     loadCartData();
                 } else {
                     document.getElementById('instructions-cart').classList.add('hidden');
@@ -486,6 +506,7 @@
                     document.getElementById('controls-oneone-group').classList.remove('hidden');
                     document.getElementById('cart-grid').classList.add('hidden');
                     document.getElementById('oneone-list-container').classList.remove('hidden');
+                    document.getElementById('cart-viewing-banner').classList.add('hidden');
                     updateCartMetaLabel();
                     renderOneOneDirectory();
                 }
@@ -586,6 +607,7 @@
                 const cartNum = getCartNumber(currentCart);
                 const activeTeacher = getCartTeacher(currentCart);
                 metaDisplay.innerHTML = `📍 Focus: <strong class="text-gray-900">${grade} - Cart ${cartNum}</strong> &nbsp;|&nbsp; Teacher Assigned: <strong class="text-red-700">${activeTeacher}</strong>`;
+                updateViewingBanner('cart-viewing-banner', currentCart);
             } else {
                 const size = Object.keys(globalOneOneData).length;
                 metaDisplay.innerHTML = `🌍 System: <strong class="text-gray-900">1:1 Assigned Framework</strong> &nbsp;|&nbsp; Tracked Active Student Directory: <strong class="text-blue-700">${size} Students</strong>`;
@@ -715,6 +737,7 @@
             const tableBody = document.getElementById('roster-matrix-body');
             tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Loading roster grid matrix values...</td></tr>`;
             if (!targetCart) return;
+            updateViewingBanner('roster-viewing-banner', targetCart);
 
             database.ref('carts/' + targetCart).once('value', (snapshot) => {
                 if (!snapshot.val()) {
