@@ -656,25 +656,38 @@
             const targetCart = document.getElementById('roster-cart-selector').value;
             const tableBody = document.getElementById('roster-matrix-body');
             tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Loading roster grid matrix values...</td></tr>`;
+            if (!targetCart) return;
 
             database.ref('carts/' + targetCart).once('value', (snapshot) => {
-                tableBody.innerHTML = '';
-                const data = snapshot.val() || {};
-                Object.keys(data).sort((a, b) => (parseInt(a.replace('slot_', ''), 10) || 0) - (parseInt(b.replace('slot_', ''), 10) || 0)).forEach(slotId => {
-                    const s = data[slotId];
-                    const tr = document.createElement('tr');
-                    tr.dataset.slotId = slotId;
-                    tr.className = "hover:bg-gray-50 transition-colors";
-                    tr.innerHTML = `
-                        <td class="p-2 font-bold text-gray-900 bg-gray-50 text-center border-r border-gray-100">${s.number}</td>
-                        <td class="p-1"><input type="text" value="${s.assetTag || 'Unmapped'}" class="asset-input w-full px-2 py-1 bg-white border border-gray-200 rounded font-mono font-bold text-gray-700 focus:outline-none"></td>
-                        <td class="p-1"><input type="text" value="${s.period_1 || ''}" placeholder="P1 Student..." class="p1-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
-                        <td class="p-1"><input type="text" value="${s.period_2 || ''}" placeholder="P2 Student..." class="p2-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
-                        <td class="p-1"><input type="text" value="${s.period_3 || ''}" placeholder="P3 Student..." class="p3-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
-                        <td class="p-1"><input type="text" value="${s.period_4 || ''}" placeholder="P4 Student..." class="p4-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
-                    `;
-                    tableBody.appendChild(tr);
-                });
+                if (!snapshot.val()) {
+                    // This cart has never been opened/initialized before - create its 30 slots now
+                    initializeEmptyCart(targetCart);
+                    database.ref('carts/' + targetCart).once('value', (freshSnapshot) => {
+                        renderRosterRows(freshSnapshot.val() || {});
+                    });
+                } else {
+                    renderRosterRows(snapshot.val());
+                }
+            });
+        }
+
+        function renderRosterRows(data) {
+            const tableBody = document.getElementById('roster-matrix-body');
+            tableBody.innerHTML = '';
+            Object.keys(data).sort((a, b) => (parseInt(a.replace('slot_', ''), 10) || 0) - (parseInt(b.replace('slot_', ''), 10) || 0)).forEach(slotId => {
+                const s = data[slotId];
+                const tr = document.createElement('tr');
+                tr.dataset.slotId = slotId;
+                tr.className = "hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-2 font-bold text-gray-900 bg-gray-50 text-center border-r border-gray-100">${s.number}</td>
+                    <td class="p-1"><input type="text" value="${s.assetTag || 'Unmapped'}" class="asset-input w-full px-2 py-1 bg-white border border-gray-200 rounded font-mono font-bold text-gray-700 focus:outline-none"></td>
+                    <td class="p-1"><input type="text" value="${s.period_1 || ''}" placeholder="P1 Student..." class="p1-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
+                    <td class="p-1"><input type="text" value="${s.period_2 || ''}" placeholder="P2 Student..." class="p2-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
+                    <td class="p-1"><input type="text" value="${s.period_3 || ''}" placeholder="P3 Student..." class="p3-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
+                    <td class="p-1"><input type="text" value="${s.period_4 || ''}" placeholder="P4 Student..." class="p4-input w-full px-2 py-1 bg-white border border-gray-200 rounded focus:outline-none"></td>
+                `;
+                tableBody.appendChild(tr);
             });
         }
 
