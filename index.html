@@ -29,41 +29,55 @@
     </div>
 
     <div id="app-root" style="display:none;">
-    <header class="text-white shadow-md px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-4" style="background-color: #c80206;">
-        <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-            <div>
-                <h1 class="text-xl font-black tracking-wide">CCA Device Manager</h1>
-                <p class="text-xs opacity-90">K-12 Multi-Period Chromebook Registry</p>
+    <header class="text-white shadow-md" style="background-color: #c80206;">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-lg flex-shrink-0">🖥️</div>
+                <div class="leading-tight">
+                    <h1 class="text-base font-black tracking-wide">CCA Device Manager</h1>
+                    <p class="text-[11px] opacity-70">K-12 Chromebook Registry</p>
+                </div>
             </div>
-            
-            <div class="flex bg-black/30 p-1 rounded-xl text-[11px] font-black tracking-wider uppercase border border-white/10">
-                <button id="mode-btn-cart" onclick="switchSystemMode('cart')" class="px-3 py-1.5 rounded-lg bg-white text-[#c80206] shadow transition-all cursor-pointer">
-                    🛒 Carts (6-7)
-                </button>
-                <button id="mode-btn-oneone" onclick="switchSystemMode('oneone')" class="px-3 py-1.5 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer">
-                    📱 1:1 Mode (8-12)
+
+            <div class="flex items-center gap-2">
+                <div class="hidden sm:flex items-center gap-2 bg-white/10 pl-1.5 pr-3 py-1 rounded-full">
+                    <span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs flex-shrink-0">👤</span>
+                    <span id="user-email-label" class="text-[11px] font-bold opacity-90 whitespace-nowrap"></span>
+                </div>
+                <button id="sign-out-btn" class="text-[11px] font-bold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-all cursor-pointer whitespace-nowrap">
+                    Sign out
                 </button>
             </div>
-        </div>
-        
-        <div class="flex flex-wrap justify-center bg-black/20 p-1 rounded-xl text-xs font-bold gap-1">
-            <button id="tab-kiosk" onclick="switchView('kiosk')" class="px-3 py-2 rounded-lg bg-white text-[#c80206] shadow transition-all cursor-pointer">
-                🏫 <span id="nav-text-grid">Classroom Grid</span>
-            </button>
-            <button id="tab-rosters" onclick="switchView('rosters')" class="px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer">
-                📋 <span id="nav-text-roster">Roster Manager</span>
-            </button>
-            <button id="tab-audit" onclick="switchView('audit')" class="px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer">
-                📊 Fleet Audit
-            </button>
-            <button id="tab-history" onclick="switchView('history')" class="px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all cursor-pointer">
-                📜 History Timeline
-            </button>
         </div>
 
-        <div class="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-xl text-[11px]">
-            <span id="user-email-label" class="font-bold opacity-90"></span>
-            <button id="sign-out-btn" class="underline opacity-75 hover:opacity-100 cursor-pointer font-bold">Sign out</button>
+        <div class="border-t border-white/10" style="background-color: #a80104;">
+            <div class="max-w-7xl mx-auto px-6 py-2 flex flex-wrap items-center gap-2">
+                <div class="flex bg-black/20 p-1 rounded-lg text-[11px] font-black tracking-wide uppercase">
+                    <button id="mode-btn-cart" onclick="switchSystemMode('cart')" class="px-3 py-1.5 rounded-md bg-white text-[#c80206] shadow transition-all cursor-pointer">
+                        🛒 Carts (6-7)
+                    </button>
+                    <button id="mode-btn-oneone" onclick="switchSystemMode('oneone')" class="px-3 py-1.5 rounded-md text-white hover:bg-white/10 transition-all cursor-pointer">
+                        📱 1:1 Mode (8-12)
+                    </button>
+                </div>
+
+                <div class="w-px h-5 bg-white/15 mx-1 hidden sm:block"></div>
+
+                <div class="flex flex-wrap gap-1 text-xs font-bold">
+                    <button id="tab-kiosk" onclick="switchView('kiosk')" class="px-3 py-1.5 rounded-md bg-white text-[#c80206] shadow transition-all cursor-pointer">
+                        🏫 <span id="nav-text-grid">Classroom Grid</span>
+                    </button>
+                    <button id="tab-rosters" onclick="switchView('rosters')" class="px-3 py-1.5 rounded-md text-white hover:bg-white/10 transition-all cursor-pointer">
+                        📋 <span id="nav-text-roster">Roster Manager</span>
+                    </button>
+                    <button id="tab-audit" onclick="switchView('audit')" class="px-3 py-1.5 rounded-md text-white hover:bg-white/10 transition-all cursor-pointer">
+                        📊 Fleet Audit
+                    </button>
+                    <button id="tab-history" onclick="switchView('history')" class="px-3 py-1.5 rounded-md text-white hover:bg-white/10 transition-all cursor-pointer">
+                        📜 History Timeline
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
 
