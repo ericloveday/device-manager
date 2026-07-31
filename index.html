@@ -348,21 +348,32 @@
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <script>
         const firebaseConfig = {
-            apiKey: "PASTE_YOUR_API_KEY_HERE",
+            apiKey: "AIzaSyDgMaA57Lr8nzf8tj2VUaTCMUeKQuVExFk",
             authDomain: "cca-device-manager.firebaseapp.com",
-            databaseURL: "https://cca-device-manager-default-rtdb.firebaseio.com/",
+            databaseURL: "https://cca-device-manager-default-rtdb.firebaseio.com",
             projectId: "cca-device-manager",
-            storageBucket: "cca-device-manager.appspot.com",
-            messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID_HERE",
-            appId: "PASTE_YOUR_APP_ID_HERE"
+            storageBucket: "cca-device-manager.firebasestorage.app",
+            messagingSenderId: "928900813459",
+            appId: "1:928900813459:web:0085cf44d145d0db43b366",
+            measurementId: "G-NMQKPD0B0X"
         };
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+
+        // Sign in anonymously so the database rules (auth != null) let this page
+        // read/write. This is invisible — no login screen appears for teachers or students.
+        const authReady = new Promise((resolve, reject) => {
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) resolve(user);
+            });
+            firebase.auth().signInAnonymously().catch(reject);
+        });
 
         let globalSystemMode = 'cart'; // 'cart' or 'oneone'
         let currentActiveTab = 'kiosk';
@@ -421,20 +432,25 @@
             }
         }
 
-        // Core Realtime Sync Setup
-        database.ref('cart_metadata').on('value', (snapshot) => {
-            globalCartMetadata = snapshot.val() || {};
-            updateDropdownLabels();
-            updateCartMetaLabel();
-            renderTeacherInputs();
-            syncRosterSelectorOptions();
-        });
+        // Core Realtime Sync Setup — waits for anonymous sign-in first
+        authReady.then(() => {
+            database.ref('cart_metadata').on('value', (snapshot) => {
+                globalCartMetadata = snapshot.val() || {};
+                updateDropdownLabels();
+                updateCartMetaLabel();
+                renderTeacherInputs();
+                syncRosterSelectorOptions();
+            });
 
-        database.ref('assigned_devices').on('value', (snapshot) => {
-            globalOneOneData = snapshot.val() || {};
-            if (globalSystemMode === 'oneone' && currentActiveTab === 'kiosk') {
-                renderOneOneDirectory();
-            }
+            database.ref('assigned_devices').on('value', (snapshot) => {
+                globalOneOneData = snapshot.val() || {};
+                if (globalSystemMode === 'oneone' && currentActiveTab === 'kiosk') {
+                    renderOneOneDirectory();
+                }
+            });
+        }).catch(err => {
+            console.error("Anonymous sign-in failed:", err);
+            alert("Couldn't connect to the database (sign-in failed). Check your connection and reload the page.");
         });
 
         // Toggle Application Modes
@@ -1201,12 +1217,16 @@
         }
 
         window.onload = () => {
-            const savedCart = getLastSelectedCart();
-            if (savedCart && cartKeysList.includes(savedCart)) {
-                const cartSelectorEl = document.getElementById('cart-selector');
-                if (cartSelectorEl) cartSelectorEl.value = savedCart;
-            }
-            loadCartData();
+            authReady.then(() => {
+                const savedCart = getLastSelectedCart();
+                if (savedCart && cartKeysList.includes(savedCart)) {
+                    const cartSelectorEl = document.getElementById('cart-selector');
+                    if (cartSelectorEl) cartSelectorEl.value = savedCart;
+                }
+                loadCartData();
+            }).catch(err => {
+                console.error("Anonymous sign-in failed:", err);
+            });
         };
     </script>
 </body>
