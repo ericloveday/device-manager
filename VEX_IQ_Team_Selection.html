@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VEX IQ Team Selection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Fira+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --navy:#1E2761;
+    --navy2:#273269;
+    --ice:#CADCFC;
+    --orange:#FF6B35;
+    --bg:#F7F9FC;
+    --card:#EEF2FA;
+    --muted:#5C6B8A;
+    --white:#FFFFFF;
+    --good:#1F7A54;
+    --good-bg:#E6F4EE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Montserrat',sans-serif;
+    background:var(--bg);
+    color:var(--navy);
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:720px;
+    margin:0 auto;
+    padding:32px 20px 60px;
+  }
+  .eyebrow{
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:2.5px;
+    color:var(--orange);
+    text-transform:uppercase;
+  }
+  h1{
+    font-size:28px;
+    font-weight:800;
+    line-height:1.15;
+    margin:8px 0 6px;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:15px;
+    line-height:1.5;
+    margin:0 0 26px;
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  /* ---- Welcome ---- */
+  .stage-row{
+    display:flex;
+    gap:10px;
+    margin:22px 0 30px;
+    flex-wrap:wrap;
+  }
+  .stage-chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--card);
+    border-radius:999px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy);
+  }
+  .stage-chip .n{
+    width:20px;height:20px;border-radius:50%;
+    background:var(--orange);color:#fff;font-size:11px;
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  label.field-label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  input[type="text"]{
+    width:100%;
+    font-family:'Montserrat',sans-serif;
+    font-size:16px;
+    font-weight:600;
+    padding:14px 16px;
+    border-radius:10px;
+    border:2px solid #DCE3F0;
+    background:var(--white);
+    color:var(--navy);
+    outline:none;
+  }
+  input[type="text"]:focus{border-color:var(--orange);}
+  textarea{
+    width:100%;
+    font-family:'Montserrat',sans-serif;
+    font-size:15px;
+    padding:14px 16px;
+    border-radius:10px;
+    border:2px solid #DCE3F0;
+    background:var(--white);
+    color:var(--navy);
+    outline:none;
+    min-height:120px;
+    resize:vertical;
+    line-height:1.5;
+  }
+  textarea:focus{border-color:var(--orange);}
+
+  button{
+    font-family:'Montserrat',sans-serif;
+    cursor:pointer;
+    border:none;
+  }
+  .btn-primary{
+    background:var(--navy);
+    color:var(--white);
+    font-weight:700;
+    font-size:15px;
+    padding:15px 26px;
+    border-radius:10px;
+    width:100%;
+    margin-top:22px;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .btn-primary:hover{background:var(--navy2);}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-primary:disabled{opacity:0.35;cursor:not-allowed;}
+  .btn-secondary{
+    background:transparent;
+    color:var(--navy);
+    font-weight:700;
+    font-size:14px;
+    padding:12px 18px;
+    border-radius:10px;
+    border:2px solid #DCE3F0;
+  }
+  .btn-secondary:hover{border-color:var(--navy);}
+
+  /* ---- Progress ---- */
+  .progress-track{
+    height:6px;
+    background:#DCE3F0;
+    border-radius:99px;
+    overflow:hidden;
+    margin-bottom:10px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--orange);
+    border-radius:99px;
+    transition:width .3s ease;
+    width:0%;
+  }
+  .progress-label{
+    font-size:12px;
+    font-weight:700;
+    color:var(--muted);
+    letter-spacing:1px;
+    text-transform:uppercase;
+    margin-bottom:28px;
+    display:flex;
+    justify-content:space-between;
+  }
+
+  /* ---- Question card (shared) ---- */
+  .q-card{
+    background:var(--white);
+    border-radius:16px;
+    padding:32px 26px;
+    box-shadow:0 8px 24px rgba(30,39,97,0.08);
+    min-height:210px;
+  }
+  .q-section{
+    font-family:'Fira Mono',monospace;
+    font-size:12px;
+    color:var(--orange);
+    font-weight:500;
+    margin-bottom:10px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  .q-text{
+    font-size:19px;
+    font-weight:600;
+    line-height:1.4;
+    margin-bottom:22px;
+  }
+
+  /* ---- Likert (role quiz) ---- */
+  .likert{display:flex;gap:8px;}
+  .likert button{
+    flex:1;
+    background:var(--card);
+    border:2px solid transparent;
+    border-radius:10px;
+    padding:14px 4px 10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    transition:all .12s ease;
+  }
+  .likert button .num{
+    width:26px;height:26px;
+    border-radius:50%;
+    background:var(--white);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;
+    font-size:13px;
+    color:var(--navy);
+  }
+  .likert button .lbl{
+    font-size:10px;
+    font-weight:600;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.2;
+  }
+  .likert button:hover{background:var(--ice);}
+  .likert button.selected{background:var(--navy);}
+  .likert button.selected .num{background:var(--orange);color:var(--white);}
+  .likert button.selected .lbl{color:var(--ice);}
+
+  /* ---- Option list (single/multi) ---- */
+  .opt-list{display:flex;flex-direction:column;gap:10px;}
+  .opt-row{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    background:var(--card);
+    border:2px solid transparent;
+    border-radius:10px;
+    padding:13px 14px;
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .opt-row:hover{background:var(--ice);}
+  .opt-row.selected{background:var(--navy);border-color:var(--navy);}
+  .opt-row .mark{
+    width:20px;height:20px;flex:none;
+    border-radius:6px;
+    border:2px solid #C3CEE8;
+    background:var(--white);
+    display:flex;align-items:center;justify-content:center;
+    margin-top:1px;
+  }
+  .opt-row.round .mark{border-radius:50%;}
+  .opt-row.selected .mark{background:var(--orange);border-color:var(--orange);}
+  .opt-row .mark svg{width:12px;height:12px;display:none;}
+  .opt-row.selected .mark svg{display:block;}
+  .opt-row .opt-text{
+    font-size:14.5px;
+    font-weight:600;
+    color:var(--navy);
+    line-height:1.4;
+  }
+  .opt-row.selected .opt-text{color:var(--white);}
+  .other-input-wrap{margin-top:2px;}
+  .other-input-wrap input{
+    width:100%;
+    font-family:'Montserrat',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    padding:11px 14px;
+    border-radius:8px;
+    border:2px solid #DCE3F0;
+    outline:none;
+    margin-top:8px;
+  }
+  .other-input-wrap input:focus{border-color:var(--orange);}
+
+  .q-nav{
+    display:flex;
+    justify-content:space-between;
+    margin-top:20px;
+    gap:10px;
+  }
+  .q-nav .spacer{flex:1;}
+
+  /* ---- Transition ---- */
+  .transition-card{
+    background:var(--navy);
+    border-radius:18px;
+    padding:36px 28px;
+    color:var(--white);
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .transition-card .circle{position:absolute;border-radius:50%;background:var(--navy2);}
+  .transition-card .c1{width:160px;height:160px;top:-60px;right:-50px;}
+  .transition-card .c2{width:120px;height:120px;bottom:-50px;left:-40px;}
+  .transition-card .content{position:relative;z-index:1;}
+  .transition-card h2{font-size:22px;font-weight:800;margin:10px 0 8px;}
+  .transition-card p{font-size:14.5px;color:var(--ice);line-height:1.5;}
+
+  /* ---- Results ---- */
+  .result-hero{
+    background:var(--navy);
+    border-radius:18px;
+    padding:32px 28px;
+    color:var(--white);
+    position:relative;
+    overflow:hidden;
+    margin-bottom:26px;
+  }
+  .result-hero .circle{position:absolute;border-radius:50%;background:var(--navy2);}
+  .result-hero .c1{width:180px;height:180px;top:-70px;right:-60px;}
+  .result-hero .c2{width:130px;height:130px;bottom:-60px;left:-40px;}
+  .result-hero .content{position:relative;z-index:1;}
+  .result-eyebrow{font-size:12px;font-weight:700;letter-spacing:2px;color:var(--orange);text-transform:uppercase;}
+  .result-role{font-size:34px;font-weight:800;margin:8px 0 10px;}
+  .result-tagline{font-size:15px;color:var(--ice);font-style:italic;margin-bottom:16px;}
+  .result-desc{font-size:14.5px;line-height:1.55;color:#E4EAF7;}
+
+  .bars{
+    background:var(--white);
+    border-radius:16px;
+    padding:24px 26px 8px;
+    box-shadow:0 8px 24px rgba(30,39,97,0.08);
+    margin-bottom:22px;
+  }
+  .bars h3{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:0 0 18px;}
+  .bar-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .bar-row .name{width:100px;font-size:13.5px;font-weight:700;flex:none;}
+  .bar-track{flex:1;background:var(--card);border-radius:8px;height:16px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:8px;background:var(--ice);transition:width .8s ease;width:0%;}
+  .bar-fill.top{background:var(--orange);}
+  .bar-row .score{width:34px;text-align:right;font-family:'Fira Mono',monospace;font-size:13px;color:var(--muted);flex:none;}
+
+  .also-strong{font-size:13.5px;color:var(--muted);line-height:1.5;margin:0 0 22px;}
+  .also-strong b{color:var(--navy);}
+  .result-actions{display:flex;gap:10px;}
+  .result-actions button{flex:1;}
+
+  footer-link{display:block;text-align:center;margin-top:36px;}
+  .teacher-link{background:none;color:var(--muted);font-size:12.5px;text-decoration:underline;padding:6px;}
+
+  /* ---- Dashboard ---- */
+  .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:10px;flex-wrap:wrap;}
+  .dash-actions{display:flex;gap:8px;}
+  .summary-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .summary-chip{background:var(--card);border-radius:10px;padding:10px 14px;font-size:12.5px;font-weight:700;color:var(--navy);flex:1;min-width:100px;text-align:center;}
+  .summary-chip .n{display:block;font-size:20px;color:var(--orange);}
+  .summary-sub{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:18px 0 8px;}
+  .dash-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(30,39,97,0.08);font-size:13px;}
+  .dash-table th{background:var(--navy);color:var(--white);text-align:left;padding:11px 12px;font-weight:700;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;}
+  .dash-table td{padding:10px 12px;border-bottom:1px solid #EEF2FA;vertical-align:top;}
+  .dash-table tr:last-child td{border-bottom:none;}
+  .role-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:11.5px;background:var(--card);color:var(--navy);white-space:nowrap;}
+  .tier-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:11.5px;white-space:nowrap;}
+  .tier-strong{background:var(--good-bg);color:var(--good);}
+  .tier-good{background:#EAF3FF;color:#1958A8;}
+  .tier-possible{background:#FFF3E0;color:#B36B00;}
+  .tier-developing{background:#F3F0FA;color:#6B4FA0;}
+  .detail-btn{background:none;color:var(--orange);font-weight:700;font-size:12px;text-decoration:underline;padding:0;}
+  .detail-row td{background:#FAFBFE;font-size:12.5px;line-height:1.6;padding:14px 16px;}
+  .detail-row .qa{margin-bottom:10px;}
+  .detail-row .qa b{color:var(--navy);display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:2px;color:var(--muted);}
+  .empty-state{text-align:center;color:var(--muted);font-size:14px;padding:50px 20px;}
+  .passcode-box{background:var(--white);border-radius:16px;padding:30px 26px;box-shadow:0 8px 24px rgba(30,39,97,0.08);text-align:center;}
+  .err-text{color:#B3401F;font-size:13px;margin-top:10px;display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== WELCOME ===== -->
+  <div class="screen active" id="screen-welcome">
+    <div class="eyebrow">VEX IQ Robotics</div>
+    <h1>Team Selection & Role Finder</h1>
+    <p class="sub">This has two short parts. Part 1 is a quick survey about how you like to work and how much time you can commit — there are no right or wrong answers, just be honest. Part 2 helps figure out which team role fits you best.</p>
+
+    <div class="stage-row">
+      <div class="stage-chip"><span class="n">1</span>Team Fit Survey</div>
+      <div class="stage-chip"><span class="n">2</span>Find Your Role</div>
+    </div>
+
+    <label class="field-label" for="student-name">Your name</label>
+    <input type="text" id="student-name" placeholder="First and last name" autocomplete="off" />
+
+    <button class="btn-primary" id="start-btn" disabled>Start Part 1</button>
+
+    <footer-link>
+      <button class="teacher-link" id="open-teacher">Teacher dashboard</button>
+    </footer-link>
+  </div>
+
+  <!-- ===== TEAM FIT QUIZ (dynamic) ===== -->
+  <div class="screen" id="screen-teamfit">
+    <div class="progress-track"><div class="progress-fill" id="tf-progress-fill"></div></div>
+    <div class="progress-label">
+      <span id="tf-progress-label">Part 1 &middot; Question 1 of 14</span>
+    </div>
+
+    <div class="q-card">
+      <div class="q-section" id="tf-section-label">Section</div>
+      <div class="q-text" id="tf-question-text">Loading...</div>
+      <div id="tf-answer-area"></div>
+    </div>
+
+    <div class="q-nav">
+      <button class="btn-secondary" id="tf-back-btn">Back</button>
+      <div class="spacer"></div>
+      <button class="btn-primary" id="tf-next-btn" style="margin-top:0;width:auto;padding:13px 28px;" disabled>Next</button>
+    </div>
+  </div>
+
+  <!-- ===== TRANSITION ===== -->
+  <div class="screen" id="screen-transition">
+    <div class="transition-card">
+      <div class="circle c1"></div>
+      <div class="circle c2"></div>
+      <div class="content">
+        <div class="eyebrow" style="color:var(--orange);">Part 1 complete</div>
+        <h2>Nice work! Now let's find your role.</h2>
+        <p>15 quick questions about how you like to work — pick whatever feels most true, there's no wrong answer.</p>
+      </div>
+    </div>
+    <button class="btn-primary" id="transition-continue-btn">Start Part 2 &rarr;</button>
+  </div>
+
+  <!-- ===== ROLE QUIZ (Likert) ===== -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-label"><span id="progress-label">Part 2 &middot; Question 1 of 15</span></div>
+
+    <div class="q-card">
+      <div class="q-section" id="q-number">Q01</div>
+      <div class="q-text" id="q-text">Loading...</div>
+      <div class="likert" id="likert-row"></div>
+    </div>
+
+    <div class="q-nav">
+      <button class="btn-secondary" id="back-btn">Back</button>
+    </div>
+  </div>
+
+  <!-- ===== RESULTS ===== -->
+  <div class="screen" id="screen-results">
+    <div class="result-hero">
+      <div class="circle c1"></div>
+      <div class="circle c2"></div>
+      <div class="content">
+        <div class="result-eyebrow" id="result-name">Results for ...</div>
+        <div class="result-role" id="result-role">Designer</div>
+        <div class="result-tagline" id="result-tagline">The architect of the robot</div>
+        <div class="result-desc" id="result-desc">...</div>
+      </div>
+    </div>
+
+    <p class="also-strong" id="also-strong"></p>
+
+    <div class="bars">
+      <h3>Your full breakdown</h3>
+      <div id="bar-rows"></div>
+    </div>
+
+    <p class="sub" style="margin-top:-8px;">Thanks for filling both parts out honestly — your coach will use this along with your role match to help build this year's team.</p>
+
+    <div class="result-actions">
+      <button class="btn-secondary" id="retake-btn">Retake</button>
+      <button class="btn-primary" id="done-btn" style="margin-top:0;">Save &amp; finish</button>
+    </div>
+    <div class="err-text" id="save-status" style="text-align:center;margin-top:14px;"></div>
+  </div>
+
+  <!-- ===== TEACHER GATE ===== -->
+  <div class="screen" id="screen-gate">
+    <div class="eyebrow">Teacher dashboard</div>
+    <h1>Enter passcode</h1>
+    <p class="sub">This just keeps students from browsing everyone's results by accident.</p>
+    <div class="passcode-box">
+      <input type="text" id="passcode-input" placeholder="Passcode" style="text-align:center;margin-bottom:6px;" />
+      <div class="err-text" id="passcode-err">That's not it — try again.</div>
+      <button class="btn-primary" id="passcode-submit">Enter</button>
+      <button class="btn-secondary" id="gate-back" style="margin-top:10px;width:100%;">Back</button>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="screen" id="screen-dashboard">
+    <div class="dash-header">
+      <div>
+        <div class="eyebrow">Teacher dashboard</div>
+        <h1 style="font-size:24px;margin-top:6px;">Team Selection Results</h1>
+      </div>
+      <div class="dash-actions">
+        <button class="btn-secondary" id="export-csv-btn">Export CSV</button>
+        <button class="btn-secondary" id="refresh-btn">Refresh</button>
+      </div>
+    </div>
+
+    <div class="summary-sub">Team fit</div>
+    <div class="summary-row" id="tier-summary-row"></div>
+
+    <div class="summary-sub">Role match</div>
+    <div class="summary-row" id="role-summary-row"></div>
+
+    <div id="dash-table-wrap" style="margin-top:18px;"></div>
+
+    <footer-link>
+      <button class="teacher-link" id="dash-back">Back</button>
+    </footer-link>
+  </div>
+
+</div>
+
+<script>
+const PASSCODE = "vex2026team";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDgMaA57Lr8nzf8tj2VUaTCMUeKQuVExFk",
+  authDomain: "cca-device-manager.firebaseapp.com",
+  databaseURL: "https://cca-device-manager-default-rtdb.firebaseio.com",
+  projectId: "cca-device-manager",
+  storageBucket: "cca-device-manager.firebasestorage.app",
+  messagingSenderId: "928900813459",
+  appId: "1:928900813459:web:0085cf44d145d0db43b366",
+  measurementId: "G-NMQKPD0B0X"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const TEAM_SELECTION_PATH = "teamSelection";
+
+// Sign in anonymously so the database rules (auth != null) let this page
+// read/write. This is invisible — no login screen appears.
+const authReady = new Promise((resolve, reject) => {
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) resolve(user);
+  });
+  firebase.auth().signInAnonymously().catch(reject);
+});
+
+/* =========================================================
+   PART 1 — TEAM FIT QUESTIONS
+   Scored questions max out at 3 points each (9 scored items = 27 max).
+   Text questions (t2, t5, t11, t14) are never auto-scored — they're
+   shown as-is to the teacher. t8 is informational only (a values
+   signal, not a "better/worse" answer).
+   ========================================================= */
+const TEAM_FIT_QUESTIONS = [
+  { id:'t1', type:'single', section:'How You Think About Problems',
+    text:"When you're working on something hard and get stuck, what do you usually do?",
+    options:[
+      {text:'Give up and move on', score:0},
+      {text:'Ask for help right away', score:1},
+      {text:'Keep trying different things until something works', score:3},
+      {text:'Take a break, then come back and try again', score:3}
+    ], allowOther:true, otherScore:1.5 },
+
+  { id:'t2', type:'text', section:'How You Think About Problems',
+    text:"Describe a time you tried to figure something out that was really frustrating. What happened?" },
+
+  { id:'t3', type:'single', section:'How You Think About Problems',
+    text:"If you built something and it didn't work, which feels most like you?",
+    options:[
+      {text:"I'd want to try again and figure out why it failed", score:3},
+      {text:"I'd feel discouraged and need someone to help me fix it", score:1},
+      {text:"I'd probably move on to something else", score:0},
+      {text:"I'd want to watch someone else do it first, then try", score:1}
+    ], allowOther:true, otherScore:1.5 },
+
+  { id:'t4', type:'multi', section:'Building & Making Experience',
+    text:"Have you ever built something out of any of these? Check all that apply.",
+    requireAtLeastOne:false,
+    options:[
+      {text:'LEGOs', score:0.5},
+      {text:"K'Nex / Snap Circuits", score:0.5},
+      {text:'Woodworking', score:0.5},
+      {text:'Electronics', score:0.5},
+      {text:'Coding / Scratch', score:0.5},
+      {text:'Minecraft Redstone', score:0.5}
+    ], allowOther:true, otherScore:0.5, maxScore:3 },
+
+  { id:'t5', type:'text', section:'Building & Making Experience',
+    text:"Tell me about something you've built or made, anything counts. What was it, and how did you make it?" },
+
+  { id:'t6', type:'single', section:'Building & Making Experience',
+    text:"When you build something, do you usually…",
+    options:[
+      {text:'Follow instructions step-by-step', score:2},
+      {text:'Glance at instructions but mostly figure it out yourself', score:3},
+      {text:'Ignore instructions and just experiment', score:2.5},
+      {text:'Start with instructions, then go off on my own', score:3}
+    ], allowOther:true, otherScore:2 },
+
+  { id:'t7', type:'single', section:'Working on a Team',
+    text:"Robotics is a team sport. When working in a group, I usually…",
+    options:[
+      {text:'Take charge and lead', score:3},
+      {text:'Prefer to do my own thing', score:1},
+      {text:'Listen and contribute when I have ideas', score:3},
+      {text:'Follow what others decide', score:2},
+      {text:'It depends on the situation', score:3}
+    ], allowOther:true, otherScore:2 },
+
+  { id:'t8', type:'single', section:'Working on a Team',
+    text:"What would bother you more?",
+    informational:true,
+    options:[
+      {text:"My part of the robot didn't work and the team lost", score:2, tag:'Craftsmanship-minded'},
+      {text:"My teammates didn't listen to my idea and the team lost", score:2, tag:'Team-process-minded'}
+    ] },
+
+  { id:'t9', type:'multi', section:'Robotics Specifically',
+    text:"What do you think building a competition robot actually involves? Check everything you think is part of it.",
+    options:[
+      {text:'Picking up pieces and snapping them together', score:0.3},
+      {text:'Designing and planning before you build', score:0.7},
+      {text:'Testing, breaking things, and rebuilding', score:0.7},
+      {text:'Watching YouTube tutorials and reading guides', score:0.5},
+      {text:'Writing and debugging code', score:0.7},
+      {text:'Strategizing against other teams', score:0.7},
+      {text:'Keeping a notebook of what you tried and why', score:0.5},
+      {text:"I'm not sure — I want to find out", score:0.3}
+    ], allowOther:true, otherScore:0.5, maxScore:3 },
+
+  { id:'t10', type:'single', section:'Commitment',
+    text:"How much time outside of class would you be willing to put into robotics? (practices, competitions, building at home)",
+    options:[
+      {text:"Only what's required in class", score:1},
+      {text:'A little extra here and there', score:2},
+      {text:"As much as it takes — I'd be all in", score:3},
+      {text:"I'm not sure yet", score:1.5}
+    ] },
+
+  { id:'t11', type:'text', section:'Commitment',
+    text:"What do you want to get out of robotics? (Write as much or as little as you want.)" },
+
+  { id:'t12', type:'slider', section:'The Honest Section',
+    text:"How interested are you in the BUILDING and ENGINEERING part of robotics?",
+    leftLabel:'Not really interested', rightLabel:'Very excited' },
+
+  { id:'t13', type:'slider', section:'The Honest Section',
+    text:"How interested are you in the COMPETITION and STRATEGY part of robotics?",
+    leftLabel:'Not really interested', rightLabel:'Very excited' },
+
+  { id:'t14', type:'text', section:'The Honest Section',
+    text:"Finish this sentence honestly: I want to do robotics because…" }
+];
+
+const TF_MAX_SCORE = 27;
+
+function tierForPct(pct){
+  if(pct >= 80) return { key:'strong', label:'Strong Candidate', emoji:'🌟', cls:'tier-strong' };
+  if(pct >= 60) return { key:'good', label:'Good Candidate', emoji:'✅', cls:'tier-good' };
+  if(pct >= 40) return { key:'possible', label:'Possible Candidate', emoji:'🤔', cls:'tier-possible' };
+  return { key:'developing', label:'Still Developing', emoji:'🌱', cls:'tier-developing' };
+}
+
+/* =========================================================
+   PART 2 — ROLE FINDER (unchanged scoring model)
+   ========================================================= */
+const ROLES = ["Designer","Builder","Coder","Strategist","Notebooker"];
+
+const ROLE_INFO = {
+  Designer: {
+    tagline: "The architect of the robot",
+    desc: "You like to picture how something should work before it's built. On your team, you'll figure out what the robot needs to do and plan out the mechanisms to do it."
+  },
+  Builder: {
+    tagline: "The engineer of the team",
+    desc: "You like putting pieces together and seeing results with your hands. On your team, you'll turn plans into a real, working robot — testing and adjusting until it's right."
+  },
+  Coder: {
+    tagline: "The programmer of the team",
+    desc: "You like solving problems step by step with logic. On your team, you'll write the instructions that make the robot move on its own and respond to the controller."
+  },
+  Strategist: {
+    tagline: "The game planner of the team",
+    desc: "You like thinking ahead and figuring out the smartest plan. On your team, you'll study the rules, scout other teams, and help build a winning game plan."
+  },
+  Notebooker: {
+    tagline: "The historian and journalist",
+    desc: "You like keeping things organized and telling the story clearly. On your team, you'll document every idea, build, and code update in the engineering notebook."
+  }
+};
+
+const QUESTIONS = [
+  { role: "Designer",   text: "I like imagining different ways to solve a problem before anything gets built." },
+  { role: "Builder",    text: "I like using tools and putting pieces together with my hands." },
+  { role: "Strategist", text: "I like thinking about the smartest plan to win a game or challenge." },
+  { role: "Coder",      text: "I enjoy solving problems using logic and step-by-step instructions." },
+  { role: "Notebooker", text: "I like writing down and organizing information clearly." },
+  { role: "Builder",    text: "I don't mind rebuilding something several times until it works right." },
+  { role: "Designer",   text: "I enjoy sketching or planning out an idea before making it real." },
+  { role: "Strategist", text: "I enjoy watching how other teams play and learning from them." },
+  { role: "Notebooker", text: "I enjoy keeping track of details that other people might forget." },
+  { role: "Coder",      text: "I like figuring out why something isn't working and fixing it." },
+  { role: "Designer",   text: "I like understanding why something needs to work a certain way before deciding how to build it." },
+  { role: "Notebooker", text: "I like telling the story of how something was made, step by step." },
+  { role: "Strategist", text: "I'm good at helping a group agree on a plan." },
+  { role: "Builder",    text: "I enjoy building things and testing them to see if they actually work." },
+  { role: "Coder",      text: "I'm interested in learning more about programming or computer science." },
+];
+
+const LIKERT_LABELS = ["Strongly\ndisagree","Disagree","Neutral","Agree","Strongly\nagree"];
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let studentName = "";
+let tfIndex = 0;
+let tfAnswers = new Array(TEAM_FIT_QUESTIONS.length).fill(null);
+// scratch state for the question currently on screen
+let tfScratchSingle = null;   // index of selected option, or 'other'
+let tfScratchMulti = new Set(); // indices selected, plus 'other'
+let tfScratchSlider = null;
+let tfScratchOtherText = '';
+let tfScratchText = '';
+
+let currentQ = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+
+let lastScores = {};
+let lastTop = "";
+
+/* ---------- Screen switching ---------- */
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+
+/* ---------- Welcome ---------- */
+const nameInput = document.getElementById("student-name");
+const startBtn = document.getElementById("start-btn");
+nameInput.addEventListener("input", () => {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+startBtn.addEventListener("click", () => {
+  studentName = nameInput.value.trim();
+  tfIndex = 0;
+  tfAnswers = new Array(TEAM_FIT_QUESTIONS.length).fill(null);
+  renderTeamFitQuestion();
+  showScreen("screen-teamfit");
+});
+
+/* =========================================================
+   TEAM FIT QUIZ RENDERING
+   ========================================================= */
+const tfProgressFill = document.getElementById('tf-progress-fill');
+const tfProgressLabel = document.getElementById('tf-progress-label');
+const tfSectionLabel = document.getElementById('tf-section-label');
+const tfQuestionText = document.getElementById('tf-question-text');
+const tfAnswerArea = document.getElementById('tf-answer-area');
+const tfBackBtn = document.getElementById('tf-back-btn');
+const tfNextBtn = document.getElementById('tf-next-btn');
+
+function checkmarkSvg(){
+  return '<svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+function renderTeamFitQuestion(){
+  const q = TEAM_FIT_QUESTIONS[tfIndex];
+  tfProgressFill.style.width = (tfIndex/TEAM_FIT_QUESTIONS.length*100) + '%';
+  tfProgressLabel.textContent = `Part 1 · Question ${tfIndex+1} of ${TEAM_FIT_QUESTIONS.length}`;
+  tfSectionLabel.textContent = q.section;
+  tfQuestionText.textContent = q.text;
+  tfBackBtn.style.visibility = tfIndex === 0 ? 'hidden' : 'visible';
+
+  // restore scratch state from a previously-given answer, if any (Back navigation)
+  const prior = tfAnswers[tfIndex];
+  tfScratchSingle = null;
+  tfScratchMulti = new Set();
+  tfScratchSlider = null;
+  tfScratchOtherText = '';
+  tfScratchText = '';
+
+  tfAnswerArea.innerHTML = '';
+
+  if(q.type === 'single'){
+    const list = document.createElement('div');
+    list.className = 'opt-list round';
+    q.options.forEach((opt, i) => {
+      const row = document.createElement('div');
+      row.className = 'opt-row round';
+      row.innerHTML = `<span class="mark">${checkmarkSvg()}</span><span class="opt-text">${opt.text}</span>`;
+      row.addEventListener('click', () => { tfScratchSingle = i; renderSingleSelection(list, q); updateTfNextEnabled(q); });
+      list.appendChild(row);
+    });
+    if(q.allowOther){
+      const row = document.createElement('div');
+      row.className = 'opt-row round';
+      row.innerHTML = `<span class="mark">${checkmarkSvg()}</span><span class="opt-text">Other</span>`;
+      row.addEventListener('click', () => { tfScratchSingle = 'other'; renderSingleSelection(list, q); updateTfNextEnabled(q); document.getElementById('tf-other-input')?.focus(); });
+      list.appendChild(row);
+    }
+    tfAnswerArea.appendChild(list);
+    if(q.allowOther){
+      const wrap = document.createElement('div');
+      wrap.className = 'other-input-wrap';
+      wrap.style.display = 'none';
+      wrap.id = 'tf-other-wrap';
+      wrap.innerHTML = `<input type="text" id="tf-other-input" placeholder="Type your answer...">`;
+      tfAnswerArea.appendChild(wrap);
+      wrap.querySelector('input').addEventListener('input', (e) => { tfScratchOtherText = e.target.value; updateTfNextEnabled(q); });
+    }
+
+    if(prior && prior.type === 'single'){
+      if(prior.isOther){
+        tfScratchSingle = 'other';
+        tfScratchOtherText = prior.text || '';
+      } else {
+        tfScratchSingle = prior.optionIndex;
+      }
+      renderSingleSelection(list, q);
+      if(tfScratchSingle === 'other'){
+        const inputEl = document.getElementById('tf-other-input');
+        if(inputEl) inputEl.value = tfScratchOtherText;
+      }
+    }
+  }
+
+  else if(q.type === 'multi'){
+    const list = document.createElement('div');
+    list.className = 'opt-list';
+    q.options.forEach((opt, i) => {
+      const row = document.createElement('div');
+      row.className = 'opt-row';
+      row.innerHTML = `<span class="mark">${checkmarkSvg()}</span><span class="opt-text">${opt.text}</span>`;
+      row.addEventListener('click', () => {
+        if(tfScratchMulti.has(i)) tfScratchMulti.delete(i); else tfScratchMulti.add(i);
+        renderMultiSelection(list);
+        updateTfNextEnabled(q);
+      });
+      list.appendChild(row);
+    });
+    if(q.allowOther){
+      const row = document.createElement('div');
+      row.className = 'opt-row';
+      row.innerHTML = `<span class="mark">${checkmarkSvg()}</span><span class="opt-text">Other</span>`;
+      row.addEventListener('click', () => {
+        if(tfScratchMulti.has('other')) tfScratchMulti.delete('other'); else tfScratchMulti.add('other');
+        renderMultiSelection(list);
+        const wrap = document.getElementById('tf-other-wrap');
+        if(wrap) wrap.style.display = tfScratchMulti.has('other') ? 'block' : 'none';
+        if(tfScratchMulti.has('other')) document.getElementById('tf-other-input')?.focus();
+        updateTfNextEnabled(q);
+      });
+      list.appendChild(row);
+    }
+    tfAnswerArea.appendChild(list);
+    if(q.allowOther){
+      const wrap = document.createElement('div');
+      wrap.className = 'other-input-wrap';
+      wrap.style.display = 'none';
+      wrap.id = 'tf-other-wrap';
+      wrap.innerHTML = `<input type="text" id="tf-other-input" placeholder="Type your answer...">`;
+      tfAnswerArea.appendChild(wrap);
+      wrap.querySelector('input').addEventListener('input', (e) => { tfScratchOtherText = e.target.value; updateTfNextEnabled(q); });
+    }
+
+    if(prior && prior.type === 'multi'){
+      (prior.optionIndices || []).forEach(i => tfScratchMulti.add(i));
+      if(prior.otherText){ tfScratchMulti.add('other'); tfScratchOtherText = prior.otherText; }
+      renderMultiSelection(list);
+      if(tfScratchMulti.has('other')){
+        const wrap = document.getElementById('tf-other-wrap');
+        if(wrap) wrap.style.display = 'block';
+        const inputEl = document.getElementById('tf-other-input');
+        if(inputEl) inputEl.value = tfScratchOtherText;
+      }
+    }
+  }
+
+  else if(q.type === 'slider'){
+    const row = document.createElement('div');
+    row.className = 'likert';
+    for(let v=1; v<=5; v++){
+      const btn = document.createElement('button');
+      const lbl = v === 1 ? q.leftLabel : (v === 5 ? q.rightLabel : '');
+      btn.innerHTML = `<span class="num">${v}</span><span class="lbl">${lbl}</span>`;
+      btn.addEventListener('click', () => { tfScratchSlider = v; renderSliderSelection(row); updateTfNextEnabled(q); });
+      row.appendChild(btn);
+    }
+    tfAnswerArea.appendChild(row);
+    if(prior && prior.type === 'slider'){
+      tfScratchSlider = prior.value;
+      renderSliderSelection(row);
+    }
+  }
+
+  else if(q.type === 'text'){
+    const ta = document.createElement('textarea');
+    ta.id = 'tf-textarea';
+    ta.placeholder = 'Type your answer...';
+    ta.addEventListener('input', (e) => { tfScratchText = e.target.value; updateTfNextEnabled(q); });
+    tfAnswerArea.appendChild(ta);
+    if(prior && prior.type === 'text'){
+      tfScratchText = prior.text || '';
+      ta.value = tfScratchText;
+    }
+  }
+
+  updateTfNextEnabled(q);
+}
+
+function renderSingleSelection(list, q){
+  const rows = list.querySelectorAll('.opt-row');
+  rows.forEach((row, i) => {
+    const isOtherRow = q.allowOther && i === q.options.length;
+    const match = isOtherRow ? tfScratchSingle === 'other' : tfScratchSingle === i;
+    row.classList.toggle('selected', match);
+  });
+  const wrap = document.getElementById('tf-other-wrap');
+  if(wrap) wrap.style.display = tfScratchSingle === 'other' ? 'block' : 'none';
+}
+
+function renderMultiSelection(list){
+  Array.from(list.children).forEach((row, i) => {
+    const isOtherRow = row.querySelector('.opt-text').textContent === 'Other';
+    const key = isOtherRow ? 'other' : i;
+    row.classList.toggle('selected', tfScratchMulti.has(key));
+  });
+}
+
+function renderSliderSelection(row){
+  Array.from(row.children).forEach((btn, i) => {
+    btn.classList.toggle('selected', tfScratchSlider === (i+1));
+  });
+}
+
+function updateTfNextEnabled(q){
+  let ok = false;
+  if(q.type === 'single'){
+    if(tfScratchSingle === 'other') ok = tfScratchOtherText.trim().length > 0;
+    else ok = tfScratchSingle !== null;
+  } else if(q.type === 'multi'){
+    const hasOtherText = tfScratchMulti.has('other') && tfScratchOtherText.trim().length > 0;
+    const effectiveCount = Array.from(tfScratchMulti).filter(k => k !== 'other').length + (hasOtherText ? 1 : 0);
+    ok = q.requireAtLeastOne === false ? true : effectiveCount > 0;
+  } else if(q.type === 'slider'){
+    ok = tfScratchSlider !== null;
+  } else if(q.type === 'text'){
+    ok = tfScratchText.trim().length > 0;
+  }
+  tfNextBtn.disabled = !ok;
+}
+
+function commitTeamFitAnswer(){
+  const q = TEAM_FIT_QUESTIONS[tfIndex];
+  let answer = { type: q.type };
+  if(q.type === 'single'){
+    if(tfScratchSingle === 'other'){
+      answer.isOther = true;
+      answer.text = tfScratchOtherText.trim();
+      answer.score = q.informational ? 0 : q.otherScore;
+    } else {
+      const opt = q.options[tfScratchSingle];
+      answer.optionIndex = tfScratchSingle;
+      answer.text = opt.text;
+      answer.score = q.informational ? 0 : opt.score;
+      if(opt.tag) answer.tag = opt.tag;
+    }
+  } else if(q.type === 'multi'){
+    const indices = Array.from(tfScratchMulti).filter(k => k !== 'other');
+    answer.optionIndices = indices;
+    answer.selectedText = indices.map(i => q.options[i].text);
+    let sum = indices.reduce((s,i) => s + q.options[i].score, 0);
+    if(tfScratchMulti.has('other') && tfScratchOtherText.trim()){
+      answer.otherText = tfScratchOtherText.trim();
+      sum += q.otherScore;
+      answer.selectedText.push('Other: ' + answer.otherText);
+    }
+    answer.score = Math.min(sum, q.maxScore ?? sum);
+  } else if(q.type === 'slider'){
+    answer.value = tfScratchSlider;
+    answer.score = (tfScratchSlider - 1) / 4 * 3; // 0..3 scale
+  } else if(q.type === 'text'){
+    answer.text = tfScratchText.trim();
+    answer.score = 0;
+  }
+  tfAnswers[tfIndex] = answer;
+}
+
+tfNextBtn.addEventListener('click', () => {
+  commitTeamFitAnswer();
+  if(tfIndex < TEAM_FIT_QUESTIONS.length - 1){
+    tfIndex++;
+    renderTeamFitQuestion();
+  } else {
+    showScreen('screen-transition');
+  }
+});
+
+tfBackBtn.addEventListener('click', () => {
+  if(tfIndex > 0){
+    commitTeamFitAnswer();
+    tfIndex--;
+    renderTeamFitQuestion();
+  }
+});
+
+document.getElementById('transition-continue-btn').addEventListener('click', () => {
+  currentQ = 0;
+  answers = new Array(QUESTIONS.length).fill(null);
+  renderQuestion();
+  showScreen('screen-quiz');
+});
+
+function computeTeamFitResult(){
+  let raw = 0;
+  tfAnswers.forEach((a, i) => {
+    const q = TEAM_FIT_QUESTIONS[i];
+    if(a && typeof a.score === 'number' && !q.informational && q.type !== 'text'){
+      raw += a.score;
+    }
+  });
+  const pct = Math.round(Math.min(raw, TF_MAX_SCORE) / TF_MAX_SCORE * 100);
+  const tier = tierForPct(pct);
+  return { raw: Math.round(raw*10)/10, max: TF_MAX_SCORE, pct, tier };
+}
+
+/* =========================================================
+   ROLE QUIZ (Likert) — unchanged logic
+   ========================================================= */
+const likertRow = document.getElementById("likert-row");
+const qText = document.getElementById("q-text");
+const qNumber = document.getElementById("q-number");
+const progressFill = document.getElementById("progress-fill");
+const progressLabel = document.getElementById("progress-label");
+const backBtn = document.getElementById("back-btn");
+
+function renderQuestion(){
+  const q = QUESTIONS[currentQ];
+  qNumber.textContent = "Q" + String(currentQ+1).padStart(2,"0");
+  qText.textContent = q.text;
+  progressFill.style.width = ((currentQ)/QUESTIONS.length*100) + "%";
+  progressLabel.textContent = `Part 2 · Question ${currentQ+1} of ${QUESTIONS.length}`;
+  backBtn.style.visibility = currentQ === 0 ? "hidden" : "visible";
+
+  likertRow.innerHTML = "";
+  LIKERT_LABELS.forEach((lbl, i) => {
+    const val = i+1;
+    const btn = document.createElement("button");
+    btn.innerHTML = `<span class="num">${val}</span><span class="lbl">${lbl.replace("\n","<br>")}</span>`;
+    if(answers[currentQ] === val) btn.classList.add("selected");
+    btn.addEventListener("click", () => selectAnswer(val));
+    likertRow.appendChild(btn);
+  });
+}
+
+function selectAnswer(val){
+  answers[currentQ] = val;
+  renderQuestion();
+  setTimeout(() => {
+    if(currentQ < QUESTIONS.length - 1){
+      currentQ++;
+      renderQuestion();
+    } else {
+      finishQuiz();
+    }
+  }, 220);
+}
+
+backBtn.addEventListener("click", () => {
+  if(currentQ > 0){
+    currentQ--;
+    renderQuestion();
+  }
+});
+
+function finishQuiz(){
+  const scores = { Designer:0, Builder:0, Coder:0, Strategist:0, Notebooker:0 };
+  QUESTIONS.forEach((q, i) => {
+    scores[q.role] += (answers[i] || 3);
+  });
+  lastScores = scores;
+
+  const sorted = ROLES.slice().sort((a,b) => scores[b]-scores[a]);
+  lastTop = sorted[0];
+  renderResults(scores, sorted);
+  showScreen("screen-results");
+}
+
+function renderResults(scores, sorted){
+  const top = sorted[0];
+  const second = sorted[1];
+  const info = ROLE_INFO[top];
+
+  document.getElementById("result-name").textContent = `Results for ${studentName || "you"}`;
+  document.getElementById("result-role").textContent = top;
+  document.getElementById("result-tagline").textContent = info.tagline;
+  document.getElementById("result-desc").textContent = info.desc;
+
+  const gapToSecond = scores[top] - scores[second];
+  const alsoStrong = document.getElementById("also-strong");
+  if(gapToSecond <= 2){
+    alsoStrong.innerHTML = `You're close between roles — <b>${top}</b> and <b>${second}</b> both fit well. Some students end up doing both.`;
+  } else {
+    alsoStrong.innerHTML = `Your next strongest fit is <b>${second}</b>.`;
+  }
+
+  const max = 15;
+  const barRows = document.getElementById("bar-rows");
+  barRows.innerHTML = "";
+  sorted.forEach(role => {
+    const pct = Math.round((scores[role]/max)*100);
+    const row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML = `
+      <div class="name">${role}</div>
+      <div class="bar-track"><div class="bar-fill ${role===top?'top':''}" style="width:0%"></div></div>
+      <div class="score">${scores[role]}/15</div>
+    `;
+    barRows.appendChild(row);
+    requestAnimationFrame(() => {
+      row.querySelector(".bar-fill").style.width = pct + "%";
+    });
+  });
+}
+
+document.getElementById("retake-btn").addEventListener("click", () => {
+  tfIndex = 0;
+  tfAnswers = new Array(TEAM_FIT_QUESTIONS.length).fill(null);
+  currentQ = 0;
+  answers = new Array(QUESTIONS.length).fill(null);
+  renderTeamFitQuestion();
+  showScreen("screen-teamfit");
+});
+
+/* ---------- Save combined result ---------- */
+document.getElementById("done-btn").addEventListener("click", async () => {
+  const statusEl = document.getElementById("save-status");
+  statusEl.style.display = "block";
+  statusEl.style.color = "#5C6B8A";
+  statusEl.textContent = "Saving...";
+  try{
+    await authReady;
+    const teamFit = computeTeamFitResult();
+    const tfAnswerLog = {};
+    TEAM_FIT_QUESTIONS.forEach((q, i) => {
+      const a = tfAnswers[i];
+      if(!a) return;
+      tfAnswerLog[q.id] = {
+        question: q.text,
+        section: q.section,
+        ...a
+      };
+    });
+
+    const payload = {
+      name: studentName || "(no name)",
+      timestamp: new Date().toISOString(),
+      teamFit: {
+        score: teamFit.raw,
+        maxScore: teamFit.max,
+        pct: teamFit.pct,
+        tier: teamFit.tier.label,
+        answers: tfAnswerLog
+      },
+      roleFinder: {
+        scores: lastScores,
+        topRole: lastTop
+      }
+    };
+
+    const newRef = db.ref(TEAM_SELECTION_PATH).push();
+    await newRef.set(payload);
+    statusEl.style.color = "#1F7A54";
+    statusEl.textContent = "Saved! You can close this or retake the survey.";
+  }catch(e){
+    console.error(e);
+    statusEl.style.color = "#B3401F";
+    statusEl.textContent = "Couldn't save — check your connection and try again.";
+  }
+});
+
+/* =========================================================
+   TEACHER GATE + DASHBOARD
+   ========================================================= */
+document.getElementById("open-teacher").addEventListener("click", () => {
+  document.getElementById("passcode-input").value = "";
+  document.getElementById("passcode-err").style.display = "none";
+  showScreen("screen-gate");
+});
+document.getElementById("gate-back").addEventListener("click", () => showScreen("screen-welcome"));
+
+document.getElementById("passcode-submit").addEventListener("click", checkPasscode);
+document.getElementById("passcode-input").addEventListener("keydown", (e) => {
+  if(e.key === "Enter") checkPasscode();
+});
+function checkPasscode(){
+  const val = document.getElementById("passcode-input").value;
+  if(val === PASSCODE){
+    loadDashboard();
+    showScreen("screen-dashboard");
+  } else {
+    document.getElementById("passcode-err").style.display = "block";
+  }
+}
+
+document.getElementById("dash-back").addEventListener("click", () => showScreen("screen-welcome"));
+document.getElementById("refresh-btn").addEventListener("click", loadDashboard);
+
+let dashboardRows = []; // cached for CSV export
+
+async function loadDashboard(){
+  const wrap = document.getElementById("dash-table-wrap");
+  const tierRow = document.getElementById("tier-summary-row");
+  const roleRow = document.getElementById("role-summary-row");
+  wrap.innerHTML = `<div class="empty-state">Loading submissions...</div>`;
+  tierRow.innerHTML = "";
+  roleRow.innerHTML = "";
+
+  try{
+    await authReady;
+    const snapshot = await db.ref(TEAM_SELECTION_PATH).once("value");
+    const val = snapshot.val() || {};
+    const rows = Object.entries(val).map(([key, v]) => ({ key, ...v }));
+
+    if(rows.length === 0){
+      wrap.innerHTML = `<div class="empty-state">No submissions yet. Once students finish both parts and tap "Save &amp; finish," they'll show up here.</div>`;
+      return;
+    }
+
+    rows.sort((a,b) => (a.name||"").localeCompare(b.name||""));
+    dashboardRows = rows;
+
+    // Tier summary
+    const tierCounts = { strong:0, good:0, possible:0, developing:0 };
+    rows.forEach(r => {
+      const t = tierForPct(r.teamFit?.pct ?? 0);
+      tierCounts[t.key]++;
+    });
+    tierRow.innerHTML = `
+      <div class="summary-chip"><span class="n">${tierCounts.strong}</span>🌟 Strong</div>
+      <div class="summary-chip"><span class="n">${tierCounts.good}</span>✅ Good</div>
+      <div class="summary-chip"><span class="n">${tierCounts.possible}</span>🤔 Possible</div>
+      <div class="summary-chip"><span class="n">${tierCounts.developing}</span>🌱 Developing</div>
+    `;
+
+    // Role summary
+    const roleCounts = { Designer:0, Builder:0, Coder:0, Strategist:0, Notebooker:0 };
+    rows.forEach(r => { const role = r.roleFinder?.topRole; if(roleCounts[role] !== undefined) roleCounts[role]++; });
+    roleRow.innerHTML = ROLES.map(role => `<div class="summary-chip"><span class="n">${roleCounts[role]}</span>${role}</div>`).join("");
+
+    // Table
+    let html = `<table class="dash-table"><thead><tr>
+      <th>Name</th><th>Team Fit</th><th>Score</th><th>Top Role</th><th></th>
+    </tr></thead><tbody>`;
+    rows.forEach((r, idx) => {
+      const tier = tierForPct(r.teamFit?.pct ?? 0);
+      html += `<tr>
+        <td>${escapeHtml(r.name || '')}</td>
+        <td><span class="tier-pill ${tier.cls}">${tier.emoji} ${tier.label}</span></td>
+        <td>${r.teamFit?.pct ?? '—'}%</td>
+        <td><span class="role-pill">${escapeHtml(r.roleFinder?.topRole || '—')}</span></td>
+        <td><button class="detail-btn" onclick="toggleDetail(${idx})">View answers</button></td>
+      </tr>
+      <tr class="detail-row" id="detail-${idx}" style="display:none;"><td colspan="5">${renderDetailHtml(r)}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    wrap.innerHTML = html;
+
+  }catch(e){
+    console.error(e);
+    wrap.innerHTML = `<div class="empty-state">Couldn't load submissions. Check your connection and tap Refresh.</div>`;
+  }
+}
+
+function renderDetailHtml(r){
+  const a = r.teamFit?.answers || {};
+  const order = ['t1','t2','t3','t4','t5','t6','t7','t8','t9','t10','t11','t12','t13','t14'];
+  let html = '';
+  order.forEach(id => {
+    const entry = a[id];
+    if(!entry) return;
+    let displayed = '';
+    if(entry.type === 'single') displayed = entry.isOther ? `Other: ${entry.text}` : entry.text;
+    else if(entry.type === 'multi') displayed = (entry.selectedText || []).join(', ') || '(none checked)';
+    else if(entry.type === 'slider') displayed = `${entry.value} / 5`;
+    else if(entry.type === 'text') displayed = entry.text || '(blank)';
+    html += `<div class="qa"><b>${escapeHtml(entry.question)}</b>${escapeHtml(displayed)}</div>`;
+  });
+  return html;
+}
+
+window.toggleDetail = function(idx){
+  const row = document.getElementById(`detail-${idx}`);
+  if(row) row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+};
+
+document.getElementById("export-csv-btn").addEventListener("click", () => {
+  if(!dashboardRows.length){ return; }
+  const headers = ['Name','Team Fit Tier','Team Fit %','Top Role','Frustration Story (t2)','What They Built (t5)','What They Want (t11)','Why Robotics (t14)'];
+  const rows = dashboardRows.map(r => {
+    const tier = tierForPct(r.teamFit?.pct ?? 0);
+    const a = r.teamFit?.answers || {};
+    return [
+      r.name || '',
+      tier.label,
+      (r.teamFit?.pct ?? ''),
+      r.roleFinder?.topRole || '',
+      a.t2?.text || '',
+      a.t5?.text || '',
+      a.t11?.text || '',
+      a.t14?.text || ''
+    ];
+  });
+  const csv = [headers, ...rows].map(row =>
+    row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')
+  ).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'team-selection-results.csv';
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// init
+renderTeamFitQuestion();
+</script>
+</body>
+</html>
