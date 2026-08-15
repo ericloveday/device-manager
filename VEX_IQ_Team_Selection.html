@@ -365,6 +365,11 @@
   .tier-good{background:#EAF3FF;color:#1958A8;}
   .tier-possible{background:#FFF3E0;color:#B36B00;}
   .tier-developing{background:#F3F0FA;color:#6B4FA0;}
+  .interest-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:11.5px;white-space:nowrap;}
+  .interest-team{background:#FFE8DE;color:var(--orange);}
+  .interest-local{background:#EAF3FF;color:#1958A8;}
+  .interest-class{background:#EDEFF5;color:var(--muted);}
+  .interest-undecided{background:#FFF3E0;color:#B36B00;}
   .detail-btn{background:none;color:var(--orange);font-weight:700;font-size:12px;text-decoration:underline;padding:0;}
   .detail-row td{background:#FAFBFE;font-size:12.5px;line-height:1.6;padding:14px 16px;}
   .detail-row .qa{margin-bottom:10px;}
@@ -402,7 +407,7 @@
   <div class="screen" id="screen-teamfit">
     <div class="progress-track"><div class="progress-fill" id="tf-progress-fill"></div></div>
     <div class="progress-label">
-      <span id="tf-progress-label">Part 1 &middot; Question 1 of 14</span>
+      <span id="tf-progress-label">Part 1 &middot; Question 1 of 15</span>
     </div>
 
     <div class="q-card">
@@ -503,6 +508,9 @@
       </div>
     </div>
 
+    <div class="summary-sub" style="margin-top:0;">After-school team interest</div>
+    <div class="summary-row" id="interest-summary-row"></div>
+
     <div class="summary-sub">Team fit</div>
     <div class="summary-row" id="tier-summary-row"></div>
 
@@ -552,6 +560,15 @@ const authReady = new Promise((resolve, reject) => {
    signal, not a "better/worse" answer).
    ========================================================= */
 const TEAM_FIT_QUESTIONS = [
+  { id:'t0', type:'single', section:'Team Commitment',
+    text:"Which best describes what you want out of robotics this year?",
+    options:[
+      {text:"I want to be on the after-school competition team — that means practices outside class time and traveling to regional, state, or higher-level competitions. I'm ready for that.", score:3, tag:'AfterSchoolTeam'},
+      {text:"I'd like to compete against other schools locally sometimes, but I'm not sure about the full after-school commitment.", score:2, tag:'LocalOnly'},
+      {text:"I just want to build and compete with my classmates during class time — that's enough for me.", score:1, tag:'InClassOnly'},
+      {text:"I'm not sure yet — I'd like to learn more before deciding.", score:1.5, tag:'Undecided'}
+    ] },
+
   { id:'t1', type:'single', section:'How You Think About Problems',
     text:"When you're working on something hard and get stuck, what do you usually do?",
     options:[
@@ -652,13 +669,26 @@ const TEAM_FIT_QUESTIONS = [
     text:"Finish this sentence honestly: I want to do robotics because…" }
 ];
 
-const TF_MAX_SCORE = 27;
+const TF_MAX_SCORE = 30;
 
 function tierForPct(pct){
   if(pct >= 80) return { key:'strong', label:'Strong Candidate', emoji:'🌟', cls:'tier-strong' };
   if(pct >= 60) return { key:'good', label:'Good Candidate', emoji:'✅', cls:'tier-good' };
   if(pct >= 40) return { key:'possible', label:'Possible Candidate', emoji:'🤔', cls:'tier-possible' };
   return { key:'developing', label:'Still Developing', emoji:'🌱', cls:'tier-developing' };
+}
+
+const INTEREST_INFO = {
+  AfterSchoolTeam: { label:'Wants Competition Team', emoji:'🚀', cls:'interest-team' },
+  LocalOnly:       { label:'Local Only',              emoji:'🏫', cls:'interest-local' },
+  InClassOnly:     { label:'In-Class Only',            emoji:'📚', cls:'interest-class' },
+  Undecided:       { label:'Not Sure Yet',             emoji:'❓', cls:'interest-undecided' }
+};
+function interestInfoFor(tag){
+  return INTEREST_INFO[tag] || { label:'—', emoji:'', cls:'interest-undecided' };
+}
+function getInterestTag(row){
+  return row.teamFit?.answers?.t0?.tag || null;
 }
 
 /* =========================================================
@@ -1211,9 +1241,11 @@ let dashboardRows = []; // cached for CSV export
 
 async function loadDashboard(){
   const wrap = document.getElementById("dash-table-wrap");
+  const interestRow = document.getElementById("interest-summary-row");
   const tierRow = document.getElementById("tier-summary-row");
   const roleRow = document.getElementById("role-summary-row");
   wrap.innerHTML = `<div class="empty-state">Loading submissions...</div>`;
+  interestRow.innerHTML = "";
   tierRow.innerHTML = "";
   roleRow.innerHTML = "";
 
@@ -1230,6 +1262,17 @@ async function loadDashboard(){
 
     rows.sort((a,b) => (a.name||"").localeCompare(b.name||""));
     dashboardRows = rows;
+
+    // Interest-level summary (the primary filter — who actually wants the after-school team)
+    const interestCounts = { AfterSchoolTeam:0, LocalOnly:0, InClassOnly:0, Undecided:0 };
+    rows.forEach(r => {
+      const tag = getInterestTag(r);
+      if(interestCounts[tag] !== undefined) interestCounts[tag]++;
+    });
+    interestRow.innerHTML = Object.keys(INTEREST_INFO).map(tag => {
+      const info = INTEREST_INFO[tag];
+      return `<div class="summary-chip"><span class="n">${interestCounts[tag]}</span>${info.emoji} ${info.label}</div>`;
+    }).join("");
 
     // Tier summary
     const tierCounts = { strong:0, good:0, possible:0, developing:0 };
@@ -1251,18 +1294,20 @@ async function loadDashboard(){
 
     // Table
     let html = `<table class="dash-table"><thead><tr>
-      <th>Name</th><th>Team Fit</th><th>Score</th><th>Top Role</th><th></th>
+      <th>Name</th><th>Interest</th><th>Team Fit</th><th>Score</th><th>Top Role</th><th></th>
     </tr></thead><tbody>`;
     rows.forEach((r, idx) => {
       const tier = tierForPct(r.teamFit?.pct ?? 0);
+      const interest = interestInfoFor(getInterestTag(r));
       html += `<tr>
         <td>${escapeHtml(r.name || '')}</td>
+        <td><span class="interest-pill ${interest.cls}">${interest.emoji} ${interest.label}</span></td>
         <td><span class="tier-pill ${tier.cls}">${tier.emoji} ${tier.label}</span></td>
         <td>${r.teamFit?.pct ?? '—'}%</td>
         <td><span class="role-pill">${escapeHtml(r.roleFinder?.topRole || '—')}</span></td>
         <td><button class="detail-btn" onclick="toggleDetail(${idx})">View answers</button></td>
       </tr>
-      <tr class="detail-row" id="detail-${idx}" style="display:none;"><td colspan="5">${renderDetailHtml(r)}</td></tr>`;
+      <tr class="detail-row" id="detail-${idx}" style="display:none;"><td colspan="6">${renderDetailHtml(r)}</td></tr>`;
     });
     html += `</tbody></table>`;
     wrap.innerHTML = html;
@@ -1275,7 +1320,7 @@ async function loadDashboard(){
 
 function renderDetailHtml(r){
   const a = r.teamFit?.answers || {};
-  const order = ['t1','t2','t3','t4','t5','t6','t7','t8','t9','t10','t11','t12','t13','t14'];
+  const order = ['t0','t1','t2','t3','t4','t5','t6','t7','t8','t9','t10','t11','t12','t13','t14'];
   let html = '';
   order.forEach(id => {
     const entry = a[id];
@@ -1297,12 +1342,14 @@ window.toggleDetail = function(idx){
 
 document.getElementById("export-csv-btn").addEventListener("click", () => {
   if(!dashboardRows.length){ return; }
-  const headers = ['Name','Team Fit Tier','Team Fit %','Top Role','Frustration Story (t2)','What They Built (t5)','What They Want (t11)','Why Robotics (t14)'];
+  const headers = ['Name','After-School Interest','Team Fit Tier','Team Fit %','Top Role','Frustration Story (t2)','What They Built (t5)','What They Want (t11)','Why Robotics (t14)'];
   const rows = dashboardRows.map(r => {
     const tier = tierForPct(r.teamFit?.pct ?? 0);
+    const interest = interestInfoFor(getInterestTag(r));
     const a = r.teamFit?.answers || {};
     return [
       r.name || '',
+      interest.label,
       tier.label,
       (r.teamFit?.pct ?? ''),
       r.roleFinder?.topRole || '',
